@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.grownited.entity.CategoryEntity;
 import com.grownited.entity.OrderEntity;
@@ -126,6 +127,7 @@ public class SessionController {
 
     // ========================= HOME PAGE (FOR ALL USERS) =========================
     @GetMapping(value = {"/", "/index", "/home"})
+    @Transactional(readOnly = true)
     public String homePage(Model model, HttpSession session) {
         
         UserEntity currentUser = (UserEntity) session.getAttribute("user");
