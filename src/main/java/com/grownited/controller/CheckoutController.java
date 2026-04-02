@@ -235,30 +235,6 @@ public class CheckoutController {
         }
         Double totalAmount = subtotal + 40.0 + (subtotal * 0.18);
 
-        // ==================== RAZORPAY FLOW ====================
-        if ("RAZORPAY".equals(paymentMode)) {
-            // Create order with PENDING_PAYMENT status (no stock deduction yet)
-            OrderEntity order = new OrderEntity();
-            order.setCustomerId(currentUser.getUserId());
-            order.setAddressId(addressId);
-            order.setTotalAmount(totalAmount);
-            order.setOrderStatus(OrderEntity.OrderStatus.PENDING_PAYMENT);
-            order.setPaymentStatus(OrderEntity.PaymentStatus.UNPAID);
-            orderRepository.save(order);
-
-            // Create order details (so we know what was ordered)
-            if (directProduct != null) {
-                createOrderDetail(order.getOrderId(), directProduct.getProductId(), directQuantity, directProduct.getPrice().doubleValue());
-            } else {
-                for (CartEntity item : cartItems) {
-                    createOrderDetail(order.getOrderId(), item.getProductId(), item.getQuantity(), item.getPrice());
-                }
-            }
-
-            // Redirect to Razorpay payment page (where the Razorpay checkout script will run)
-            return "redirect:/payment/" + order.getOrderId();
-        }
-
         // ==================== NON‑RAZORPAY FLOW (CARD + SIMULATED MODES) ====================
         // ===== 3. Create order with status PENDING_PAYMENT =====
         OrderEntity order = new OrderEntity();
@@ -333,7 +309,6 @@ public class CheckoutController {
             }
             
             // ========== SEND ORDER CONFIRMATION EMAIL ==========
-         // ========== SEND ORDER CONFIRMATION EMAIL ==========
             try {
                 UserEntity customer = userRepository.findById(currentUser.getUserId()).orElse(null);
                 if (customer != null) {

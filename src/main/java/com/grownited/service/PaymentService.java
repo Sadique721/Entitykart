@@ -3,18 +3,12 @@ package com.grownited.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.grownited.entity.OrderEntity;
 import com.grownited.entity.PaymentEntity;
-import com.grownited.repository.OrderRepository;
 import com.grownited.repository.PaymentRepository;
 
 import net.authorize.Environment;
@@ -40,9 +34,6 @@ public class PaymentService {
 
     @Autowired
     private PaymentRepository paymentRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
 
     // ---------------------- Authorize.Net Card Payment ----------------------
     public PaymentEntity processCardPayment(Integer orderId, Double amount, Map<String, String> cardDetails) {
@@ -130,61 +121,24 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    // ---------------------- Razorpay Integration ----------------------
-    public JSONObject createRazorpayOrder(Integer orderId, Double amount) {
-        // This should call Razorpay API to create an order.
-        // For simplicity, we return a mock JSON response.
-        // In production, use Razorpay client with your API keys.
-        JSONObject order = new JSONObject();
-        order.put("id", "order_" + UUID.randomUUID().toString().substring(0, 12));
-        order.put("amount", amount * 100); // in paise
-        order.put("currency", "INR");
-        order.put("receipt", "order_" + orderId);
-        return order;
+    // Wrapper method used by controller
+    public PaymentEntity processPayment(Integer orderId, Double amount, Map<String, String> cardDetails) {
+        return processCardPayment(orderId, amount, cardDetails);
     }
 
-    public boolean verifyRazorpaySignature(String orderId, String paymentId, String signature) {
-        // Verify Razorpay signature using your secret key.
-        // Return true for now (mock).
-        return true;
-    }
-
-    public PaymentEntity saveRazorpayPayment(Integer orderId, String razorpayPaymentId,
-                                             String razorpayOrderId, String razorpaySignature,
-                                             Double amount) {
-        PaymentEntity payment = new PaymentEntity();
-        payment.setOrderId(orderId);
-        payment.setAmount(amount);
-        payment.setPaymentMode(PaymentEntity.PaymentMode.RAZORPAY);
-        payment.setGatewayName("RAZORPAY");
-        payment.setPaymentStatus(PaymentEntity.PaymentGatewayStatus.SUCCESS);
-        payment.setGatewayTransactionId(razorpayPaymentId);
-        payment.setTransactionRef(razorpayPaymentId);
-        payment.setPaymentDate(LocalDateTime.now());
-        return paymentRepository.save(payment);
-    }
-
-    // ---------------------- Simulated Payments (COD, UPI) ----------------------
+    // ---------------------- Simulated Payment (COD, UPI, etc.) ----------------------
     public PaymentEntity simulatePayment(Integer orderId, Double amount, String paymentMode) {
         PaymentEntity payment = new PaymentEntity();
         payment.setOrderId(orderId);
         payment.setAmount(amount);
         payment.setPaymentMode(PaymentEntity.PaymentMode.valueOf(paymentMode));
         payment.setTransactionRef("TXN" + System.currentTimeMillis());
-
-        // 95% success rate for simulation
+        // Simulate 95% success rate
         boolean success = Math.random() < 0.95;
+        payment.setPaymentStatus(success ? PaymentEntity.PaymentGatewayStatus.SUCCESS : PaymentEntity.PaymentGatewayStatus.FAILED);
         if (success) {
-            payment.setPaymentStatus(PaymentEntity.PaymentGatewayStatus.SUCCESS);
             payment.setPaymentDate(LocalDateTime.now());
-        } else {
-            payment.setPaymentStatus(PaymentEntity.PaymentGatewayStatus.FAILED);
         }
         return paymentRepository.save(payment);
-    }
-
-    // Wrapper method used by controller
-    public PaymentEntity processPayment(Integer orderId, Double amount, Map<String, String> cardDetails) {
-        return processCardPayment(orderId, amount, cardDetails);
     }
 }

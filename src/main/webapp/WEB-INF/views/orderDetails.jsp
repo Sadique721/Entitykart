@@ -303,7 +303,7 @@
                             <c:if test="${not empty payment}">
                                 <p><strong>Payment Method:</strong> ${payment.paymentMode}</p>
                                 <p><strong>Transaction ID:</strong> ${payment.transactionRef}</p>
-                                <p><strong>Payment Date:</strong>${payment.paymentDate}</p>
+                                <p><strong>Payment Date:</strong><fmt:formatDate value="${payment.paymentDateAsDate}" pattern=" dd MMM yyyy, hh:mm a"/></p>
                                 <p><strong>Payment Status:</strong> 
                                     <span class="badge ${payment.paymentStatus == 'SUCCESS' ? 'bg-success' : payment.paymentStatus == 'FAILED' ? 'bg-danger' : 'bg-warning'}">
                                         ${payment.paymentStatus}

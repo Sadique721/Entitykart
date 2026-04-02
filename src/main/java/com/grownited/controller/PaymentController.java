@@ -7,9 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +15,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.grownited.entity.AddressEntity;
-import com.grownited.entity.OrderDetailEntity;
 import com.grownited.entity.OrderEntity;
 import com.grownited.entity.PaymentEntity;
 import com.grownited.entity.UserEntity;
@@ -69,37 +65,6 @@ public class PaymentController {
 
     // ==================== CUSTOMER PAYMENT FLOW ====================
 
-    @GetMapping("/payment/{orderId}")
-    public String paymentPage(@PathVariable Integer orderId,
-                              HttpSession session,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
-        UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        if (currentUser == null) {
-            return "redirect:/login";
-        }
-
-        Optional<OrderEntity> orderOpt = orderRepository.findById(orderId);
-        if (orderOpt.isEmpty() || !orderOpt.get().getCustomerId().equals(currentUser.getUserId())) {
-            redirectAttributes.addFlashAttribute("error", "Order not found!");
-            return "redirect:/orders";
-        }
-
-        OrderEntity order = orderOpt.get();
-
-        // If payment already exists, show details
-        Optional<PaymentEntity> existingPayment = paymentRepository.findByOrderId(orderId);
-        if (existingPayment.isPresent()) {
-            model.addAttribute("payment", existingPayment.get());
-            return "paymentDetails";
-        }
-
-        // For Razorpay, we pass the key and order details
-        model.addAttribute("order", order);
-        model.addAttribute("razorpayKey", "rzp_test_SWzPlR2zPWv4CR"); // replace with your key
-        return "razorpayPayment";
-    }
-
     @PostMapping("/payment/process")
     public String processPayment(@RequestParam Integer orderId,
                                  @RequestParam String paymentMode,
@@ -130,7 +95,7 @@ public class PaymentController {
         if ("CARD".equals(paymentMode)) {
             if (!validateCardDetails(cardNumber, expiryMonth, expiryYear, cvv)) {
                 redirectAttributes.addFlashAttribute("error", "Invalid card details!");
-                return "redirect:/payment/" + orderId;
+                return "redirect:/checkout?error=invalid_card";
             }
 
             Map<String, String> cardDetails = new HashMap<>();
@@ -161,7 +126,7 @@ public class PaymentController {
         // For other modes (COD, UPI, etc.) – simulation
         if ("UPI".equals(paymentMode) && !validateUpiId(upiId)) {
             redirectAttributes.addFlashAttribute("error", "Invalid UPI ID!");
-            return "redirect:/payment/" + orderId;
+            return "redirect:/checkout?error=invalid_upi";
         }
 
         // Simulate payment using the service
@@ -201,124 +166,6 @@ public class PaymentController {
         model.addAttribute("order", orderOpt.get());
         model.addAttribute("payment", paymentOpt.get());
         return "paymentStatus";
-    }
-
-    @GetMapping("/payment/retry/{orderId}")
-    public String retryPayment(@PathVariable Integer orderId,
-                               HttpSession session,
-                               RedirectAttributes redirectAttributes) {
-        UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        if (currentUser == null) {
-            return "redirect:/login";
-        }
-
-        Optional<OrderEntity> orderOpt = orderRepository.findById(orderId);
-        if (orderOpt.isEmpty() || !orderOpt.get().getCustomerId().equals(currentUser.getUserId())) {
-            redirectAttributes.addFlashAttribute("error", "Order not found!");
-            return "redirect:/orders";
-        }
-
-        // Delete any previous failed payment record so a new one can be created
-        Optional<PaymentEntity> existingPayment = paymentRepository.findByOrderId(orderId);
-        if (existingPayment.isPresent() &&
-                existingPayment.get().getPaymentStatus() == PaymentEntity.PaymentGatewayStatus.FAILED) {
-            paymentRepository.delete(existingPayment.get());
-        }
-
-        return "redirect:/payment/" + orderId;
-    }
-
-    // ==================== RAZORPAY ENDPOINTS ====================
-
-    @PostMapping("/razorpay/create-order")
-    @ResponseBody
-    public String createRazorpayOrder(@RequestParam Integer orderId,
-                                      HttpSession session) {
-        UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        if (currentUser == null) {
-            return "{\"error\":\"Please login\"}";
-        }
-        Optional<OrderEntity> orderOpt = orderRepository.findById(orderId);
-        if (orderOpt.isEmpty() || !orderOpt.get().getCustomerId().equals(currentUser.getUserId())) {
-            return "{\"error\":\"Order not found\"}";
-        }
-        OrderEntity order = orderOpt.get();
-        if (order.getOrderStatus() != OrderEntity.OrderStatus.PENDING_PAYMENT) {
-            return "{\"error\":\"Invalid order state\"}";
-        }
-        JSONObject razorpayOrder = paymentService.createRazorpayOrder(orderId, order.getTotalAmount());
-        return razorpayOrder.toString();
-    }
-
-    @PostMapping("/razorpay/success")
-    @Transactional
-    @ResponseBody
-    public Map<String, Object> razorpaySuccess(@RequestParam Integer orderId,
-                                               @RequestParam String razorpay_payment_id,
-                                               @RequestParam String razorpay_order_id,
-                                               @RequestParam String razorpay_signature,
-                                               HttpSession session) {
-        Map<String, Object> response = new HashMap<>();
-        UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        if (currentUser == null) {
-            response.put("success", false);
-            response.put("message", "Please login");
-            return response;
-        }
-
-        Optional<OrderEntity> orderOpt = orderRepository.findById(orderId);
-        if (orderOpt.isEmpty() || !orderOpt.get().getCustomerId().equals(currentUser.getUserId())) {
-            response.put("success", false);
-            response.put("message", "Order not found");
-            return response;
-        }
-
-        OrderEntity order = orderOpt.get();
-
-        // 1. Verify signature
-        boolean verified = paymentService.verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
-        if (!verified) {
-            response.put("success", false);
-            response.put("message", "Payment verification failed");
-            return response;
-        }
-
-        // 2. Save payment record
-        Double amount = order.getTotalAmount();
-        PaymentEntity payment = paymentService.saveRazorpayPayment(orderId, razorpay_payment_id,
-                razorpay_order_id, razorpay_signature, amount);
-
-        // 3. Update order status & deduct stock
-        order.setOrderStatus(OrderEntity.OrderStatus.PLACED);
-        order.setPaymentStatus(OrderEntity.PaymentStatus.PAID);
-        orderRepository.save(order);
-
-        // 4. Deduct stock
-        List<OrderDetailEntity> orderDetails = orderDetailRepository.findByOrderId(orderId);
-        for (OrderDetailEntity detail : orderDetails) {
-            stockService.deductStock(detail.getProductId(), detail.getQuantity());
-        }
-
-        // 5. Clear cart
-        cartRepository.deleteByCustomerId(currentUser.getUserId());
-
-        // 6. Build product names map for email
-        Map<Integer, String> productNames = new HashMap<>();
-        for (OrderDetailEntity detail : orderDetails) {
-            productRepository.findById(detail.getProductId())
-                    .ifPresent(product -> productNames.put(detail.getProductId(), product.getProductName()));
-        }
-
-        // 7. Send order confirmation email
-        try {
-            mailerService.sendOrderConfirmationEmail(currentUser, order, orderDetails, productNames);
-        } catch (Exception e) {
-            log.error("Email failed: {}", e.getMessage());
-        }
-
-        response.put("success", true);
-        response.put("orderId", orderId);
-        return response;
     }
 
     // ==================== ADMIN PANEL ENDPOINTS ====================
@@ -391,7 +238,7 @@ public class PaymentController {
 
         model.addAttribute("payment", payment);
         model.addAttribute("order", order);
-        model.addAttribute("address", address);   // <-- new attribute
+        model.addAttribute("address", address);
 
         return "adminPaymentDetails";
     }
