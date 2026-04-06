@@ -28,12 +28,15 @@ import com.cloudinary.utils.ObjectUtils;
 import com.grownited.entity.CategoryEntity;
 import com.grownited.entity.ProductEntity;
 import com.grownited.entity.ProductImageEntity;
+import com.grownited.entity.ReviewRatingEntity;
 import com.grownited.entity.SubCategoryEntity;
 import com.grownited.entity.UserEntity;
 import com.grownited.repository.CategoryRepository;
 import com.grownited.repository.ProductImageRepository;
 import com.grownited.repository.ProductRepository;
+import com.grownited.repository.ReviewRatingRepository;
 import com.grownited.repository.SubCategoryRepository;
+import com.grownited.repository.UserRepository;
 import com.grownited.repository.WishlistRepository;
 
 import jakarta.servlet.http.HttpSession;
@@ -51,6 +54,12 @@ public class ProductController {
     private static final int RELATED_PRODUCTS_LIMIT = 8;
     private static final int LOW_STOCK_THRESHOLD = 10;
 
+    @Autowired
+    private ReviewRatingRepository reviewRatingRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+    
     @Autowired
     private ProductRepository productRepository;
 
@@ -785,6 +794,51 @@ public class ProductController {
                 model.addAttribute("inWishlist", inWishlist);
             }
             
+            // ========== REAL REVIEW DATA ==========
+            // Get average rating for this product
+            Double avgRating = reviewRatingRepository.getAverageRatingForProduct(productId);
+            if (avgRating == null) avgRating = 0.0;
+            
+            // Get total review count
+            Long totalReviews = reviewRatingRepository.getReviewCountForProduct(productId);
+            if (totalReviews == null) totalReviews = 0L;
+            
+            // Get rating distribution for this product (1-5 stars)
+            List<Object[]> distributionRaw = reviewRatingRepository.getRatingDistribution(productId);
+            Map<Integer, Long> ratingDistribution = new HashMap<>();
+            for (int i = 1; i <= 5; i++) {
+                ratingDistribution.put(i, 0L);
+            }
+            for (Object[] row : distributionRaw) {
+                Integer rating = (Integer) row[0];
+                Long count = (Long) row[1];
+                ratingDistribution.put(rating, count);
+            }
+            
+            // Get all reviews for this product with user details (pagination optional, here fetch first 10)
+            Pageable reviewPageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+            List<Object[]> reviewsWithUsers = reviewRatingRepository.findReviewsWithUserDetails(productId, reviewPageable);
+            
+            // Transform to a list of maps for easier JSP access
+            List<Map<String, Object>> reviewList = new ArrayList<>();
+            for (Object[] row : reviewsWithUsers) {
+                ReviewRatingEntity review = (ReviewRatingEntity) row[0];
+                String userName = (String) row[1];
+                String userPic = (String) row[2];
+                
+                Map<String, Object> reviewMap = new HashMap<>();
+                reviewMap.put("reviewId", review.getReviewId());
+                reviewMap.put("rating", review.getRating());
+                reviewMap.put("comment", review.getComment());
+                reviewMap.put("customerId", review.getCustomerId());
+                reviewMap.put("userName", userName != null ? userName : "Anonymous");
+                reviewMap.put("userPic", userPic != null ? userPic : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png");
+                reviewMap.put("formattedDate", review.getFormattedDate());
+                reviewMap.put("createdAtAsDate", review.getCreatedAtAsDate());
+                reviewList.add(reviewMap);
+            }
+            // ====================================
+            
             // Get related products (same category)
             List<ProductEntity> relatedProducts = getRelatedProducts(product);
             
@@ -799,12 +853,16 @@ public class ProductController {
             model.addAttribute("relatedProducts", relatedProducts);
             model.addAttribute("recentlyViewed", recentlyViewed);
             
-            // Add quantity selector value
+            // Review-related attributes
+            model.addAttribute("avgRating", avgRating);
+            model.addAttribute("totalReviews", totalReviews);
+            model.addAttribute("ratingDistribution", ratingDistribution);
+            model.addAttribute("reviews", reviewList);
+            
+            // Default quantity
             model.addAttribute("defaultQuantity", 1);
             
-            // Placeholder data - implement actual logic
-            model.addAttribute("avgRating", 4.2);
-            model.addAttribute("totalReviews", 128);
+            // Placeholder for features (optional)
             model.addAttribute("productFeatures", new String[]{"High Quality", "Best Price", "Fast Delivery"});
 
         } catch (Exception e) {
@@ -855,6 +913,11 @@ public class ProductController {
         }
         
         return recentlyViewed;
+    }
+    
+    @GetMapping("/viewProduct")
+    public String legacyViewProduct(@RequestParam Integer productId) {
+        return "redirect:/product/" + productId;
     }
 
     // ========================= USER: QUICK VIEW (AJAX) =========================

@@ -107,7 +107,7 @@
     </div>
 </div>
 
-<!-- Product Images Tab -->
+<!-- Product Images & Reviews Tabs -->
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-md-12">
@@ -135,7 +135,6 @@
             <div class="tab-content p-3 border border-top-0 rounded-bottom" id="productTabsContent">
                 <!-- Details Tab -->
                 <div class="tab-pane fade show active" id="details" role="tabpanel">
-                    <!-- Product details already shown above -->
                     <p class="text-muted">Product details are shown in the table above.</p>
                 </div>
                 
@@ -147,8 +146,6 @@
                             <i class="fas fa-edit me-1"></i>Manage Images
                         </a>
                     </div>
-                    
-                    <!-- Image Gallery will be loaded via AJAX -->
                     <div id="imageGalleryContainer" class="text-center py-4">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
@@ -156,14 +153,13 @@
                     </div>
                 </div>
                 
-                <!-- Reviews Tab -->
+                <!-- Reviews Tab - ENHANCED with full list, pagination, edit/delete -->
                 <div class="tab-pane fade" id="reviews" role="tabpanel">
-                    <!-- Review Section (Moved inside tab) -->
                     <div class="mt-2">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5><i class="fas fa-star me-2"></i>Customer Reviews</h5>
                             <a href="/product/reviews/${productEntity.productId}" class="btn btn-outline-primary btn-sm">
-                                View All Reviews <i class="fas fa-arrow-right ms-1"></i>
+                                View All Reviews (Full Page) <i class="fas fa-arrow-right ms-1"></i>
                             </a>
                         </div>
                         
@@ -177,8 +173,15 @@
                             <div class="col-md-9" id="ratingDistribution"></div>
                         </div>
                         
-                        <!-- Recent Reviews -->
-                        <div id="recentReviews"></div>
+                        <!-- All Reviews Container (with pagination) -->
+                        <div id="allReviewsContainer">
+                            <div class="text-center py-3" id="reviewsLoading">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p>Loading reviews...</p>
+                            </div>
+                            <div id="reviewsList"></div>
+                            <div id="loadMoreBtnContainer" class="text-center mt-3"></div>
+                        </div>
                         
                         <!-- Write Review Button -->
                         <div class="text-center mt-3">
@@ -194,15 +197,9 @@
 </div>
 
 <script>
-    // Load images when tab is clicked
+    // ==================== IMAGES TAB ====================
     document.getElementById('images-tab').addEventListener('click', function() {
         loadProductImages(${productEntity.productId});
-    });
-    
-    // Load reviews when tab is clicked
-    document.getElementById('reviews-tab').addEventListener('click', function() {
-        loadReviewSummary();
-        loadRecentReviews();
     });
     
     function loadProductImages(productId) {
@@ -211,7 +208,6 @@
             .then(data => {
                 const container = document.getElementById('imageGalleryContainer');
                 const countBadge = document.getElementById('imageCount');
-                
                 countBadge.textContent = data.length;
                 
                 if (data.length === 0) {
@@ -224,13 +220,10 @@
                     html += `
                         <div class="col-md-3 col-sm-4 mb-3">
                             <div class="card">
-                                <img src="\${image.imageURL}" class="card-img-top" 
-                                     style="height: 150px; object-fit: cover;">
+                                <img src="\${image.imageURL}" class="card-img-top" style="height: 150px; object-fit: cover;">
                                 <div class="card-body p-2 text-center">
                                     ${image.primary ? '<span class="badge bg-warning text-dark">Primary</span>' : ''}
-                                    <small class="text-muted d-block mt-1">
-                                        Order: \${image.displayOrder}
-                                    </small>
+                                    <small class="text-muted d-block mt-1">Order: \${image.displayOrder}</small>
                                 </div>
                             </div>
                         </div>
@@ -245,6 +238,136 @@
             });
     }
     
+    // ==================== REVIEWS TAB (ENHANCED) ====================
+    let currentPage = 0;
+    let totalPages = 0;
+    let isLoading = false;
+    
+    // Load summary and first page of reviews when tab is clicked
+    document.getElementById('reviews-tab').addEventListener('click', function() {
+        loadReviewSummary();
+        resetAndLoadReviews();
+    });
+    
+    function resetAndLoadReviews() {
+        currentPage = 0;
+        document.getElementById('reviewsList').innerHTML = '';
+        document.getElementById('loadMoreBtnContainer').innerHTML = '';
+        loadReviewsPage();
+    }
+    
+    function loadReviewsPage() {
+        if (isLoading) return;
+        isLoading = true;
+        
+        const url = `/api/product/${productEntity.productId}/reviews?page=${currentPage}&size=5`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('reviewsLoading').style.display = 'none';
+                totalPages = data.totalPages;
+                renderReviews(data.reviews);
+                
+                if (currentPage + 1 < totalPages) {
+                    const loadMoreBtn = document.createElement('button');
+                    loadMoreBtn.className = 'btn btn-outline-primary';
+                    loadMoreBtn.innerHTML = '<i class="fas fa-chevron-down me-2"></i>Load More Reviews';
+                    loadMoreBtn.onclick = () => {
+                        currentPage++;
+                        loadReviewsPage();
+                    };
+                    document.getElementById('loadMoreBtnContainer').innerHTML = '';
+                    document.getElementById('loadMoreBtnContainer').appendChild(loadMoreBtn);
+                } else {
+                    document.getElementById('loadMoreBtnContainer').innerHTML = 
+                        '<p class="text-muted">— End of reviews —</p>';
+                }
+                isLoading = false;
+            })
+            .catch(error => {
+                console.error('Error loading reviews:', error);
+                document.getElementById('reviewsLoading').innerHTML = 
+                    '<p class="text-danger">Failed to load reviews. Please try again.</p>';
+                isLoading = false;
+            });
+    }
+    
+    function renderReviews(reviews) {
+        const container = document.getElementById('reviewsList');
+        if (reviews.length === 0 && currentPage === 0) {
+            container.innerHTML = '<p class="text-muted text-center">No reviews yet. Be the first to review!</p>';
+            return;
+        }
+        
+        reviews.forEach(review => {
+            const stars = getStarRatingHTML(review.rating);
+            const userPic = review.userPic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+            const formattedDate = new Date(review.createdAt).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric'
+            });
+            
+            let actionButtons = '';
+            const loggedInUserId = '${sessionScope.user.userId}';
+            const isAdmin = '${sessionScope.user.role}' === 'ADMIN';
+            
+            if (loggedInUserId && (loggedInUserId == review.customerId || isAdmin)) {
+                actionButtons = `
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editReview(${review.reviewId}, '${escapeHtml(review.comment)}', ${review.rating})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteReview(${review.reviewId})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+            }
+            
+            const reviewHtml = `
+                <div class="card mb-3" id="reviewCard-${review.reviewId}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="\${userPic}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0">\${escapeHtml(review.userName)}</h6>
+                                <small class="text-muted">\${formattedDate}</small>
+                            </div>
+                        </div>
+                        <div class="mb-2">\${stars}</div>
+                        <p class="mb-0">\${escapeHtml(review.comment)}</p>
+                        \${actionButtons}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', reviewHtml);
+        });
+    }
+    
+    function getStarRatingHTML(rating) {
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                html += '<i class="fas fa-star text-warning"></i>';
+            } else if (i - rating < 1 && i - rating > 0) {
+                html += '<i class="fas fa-star-half-alt text-warning"></i>';
+            } else {
+                html += '<i class="far fa-star text-warning"></i>';
+            }
+        }
+        return html;
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
     function loadReviewSummary() {
         fetch('/api/product/${productEntity.productId}/rating')
             .then(response => response.json())
@@ -253,27 +376,15 @@
                 document.getElementById('totalReviews').textContent = data.totalReviews + ' reviews';
                 document.getElementById('reviewCount').textContent = data.totalReviews;
                 
-                // Generate star rating
-                const starRating = document.getElementById('starRating');
-                starRating.innerHTML = '';
-                const avg = parseFloat(data.avgRating);
-                for (let i = 1; i <= 5; i++) {
-                    if (i <= avg) {
-                        starRating.innerHTML += '<i class="fas fa-star text-warning"></i>';
-                    } else if (i - avg < 1 && i - avg > 0) {
-                        starRating.innerHTML += '<i class="fas fa-star-half-alt text-warning"></i>';
-                    } else {
-                        starRating.innerHTML += '<i class="far fa-star text-warning"></i>';
-                    }
-                }
+                const starRatingDiv = document.getElementById('starRating');
+                starRatingDiv.innerHTML = getStarRatingHTML(parseFloat(data.avgRating));
                 
-                // Generate distribution
-                const dist = document.getElementById('ratingDistribution');
-                dist.innerHTML = '';
+                const distContainer = document.getElementById('ratingDistribution');
+                distContainer.innerHTML = '';
                 for (let i = 5; i >= 1; i--) {
                     const count = data.distribution[i] || 0;
                     const percentage = data.totalReviews > 0 ? (count / data.totalReviews * 100) : 0;
-                    dist.innerHTML += `
+                    distContainer.innerHTML += `
                         <div class="row align-items-center mb-2">
                             <div class="col-md-2 text-end">${i} star</div>
                             <div class="col-md-8">
@@ -295,49 +406,74 @@
             .catch(error => console.error('Error loading review summary:', error));
     }
     
-    function loadRecentReviews() {
-        fetch('/api/product/${productEntity.productId}/recent-reviews')
-            .then(response => response.json())
-            .then(reviews => {
-                const container = document.getElementById('recentReviews');
-                if (reviews.length === 0) {
-                    container.innerHTML = '<p class="text-muted text-center">No reviews yet. Be the first to review!</p>';
-                    return;
+    function deleteReview(reviewId) {
+        if (!confirm('Are you sure you want to delete this review?')) return;
+        
+        fetch(`/review/delete/${reviewId}`, { method: 'GET' })
+            .then(response => {
+                if (response.redirected || response.ok) {
+                    // Remove the review card from DOM
+                    const card = document.getElementById(`reviewCard-${reviewId}`);
+                    if (card) card.remove();
+                    // Reload summary and reset list to reflect changes
+                    loadReviewSummary();
+                    resetAndLoadReviews();
+                    showToast('Review deleted successfully!');
+                } else {
+                    showToast('Failed to delete review', 'error');
                 }
-                
-                container.innerHTML = '';
-                reviews.forEach(review => {
-                    let stars = '';
-                    for (let i = 1; i <= 5; i++) {
-                        stars += i <= review.rating ? 
-                            '<i class="fas fa-star text-warning"></i>' : 
-                            '<i class="far fa-star text-warning"></i>';
-                    }
-                    
-                    container.innerHTML += `
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center mb-2">
-                                    <img src="\${review.userPic || 'https://via.placeholder.com/40'}" 
-                                         class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
-                                    <div>
-                                        <h6 class="mb-0">\${review.userName}</h6>
-                                        <small class="text-muted">\${review.date}</small>
-                                    </div>
-                                </div>
-                                <div class="mb-2">\${stars}</div>
-                                <p class="mb-0">\${review.comment}</p>
-                            </div>
-                        </div>
-                    `;
-                });
             })
-            .catch(error => console.error('Error loading recent reviews:', error));
+            .catch(error => {
+                console.error('Error deleting review:', error);
+                showToast('An error occurred', 'error');
+            });
     }
     
-    // Load reviews by default if the reviews tab is active
+    function editReview(reviewId, currentComment, currentRating) {
+        const newComment = prompt('Edit your review:', currentComment);
+        if (newComment === null) return;
+        
+        let newRating = prompt('Edit rating (1-5):', currentRating);
+        if (newRating === null) return;
+        newRating = parseInt(newRating);
+        if (isNaN(newRating) || newRating < 1 || newRating > 5) {
+            alert('Rating must be between 1 and 5');
+            return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('reviewId', reviewId);
+        formData.append('rating', newRating);
+        formData.append('comment', newComment);
+        
+        fetch('/review/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+        .then(response => {
+            if (response.redirected || response.ok) {
+                showToast('Review updated successfully!');
+                // Refresh the reviews list
+                resetAndLoadReviews();
+                loadReviewSummary();
+            } else {
+                showToast('Failed to update review', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating review:', error);
+            showToast('An error occurred', 'error');
+        });
+    }
+    
+    function showToast(message, type = 'success') {
+        // Simple alert fallback (you can replace with a nice toast library)
+        alert(message);
+    }
+    
+    // Auto-load images if the images tab is active on page load (optional)
     document.addEventListener('DOMContentLoaded', function() {
-        // Check if reviews tab is active (you can set a parameter to control this)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('tab') === 'reviews') {
             document.getElementById('reviews-tab').click();
@@ -351,13 +487,11 @@
         font-weight: 300;
         line-height: 1.2;
     }
-    
     .progress {
         height: 20px;
         border-radius: 10px;
         background-color: #e9ecef;
     }
-    
     .progress-bar {
         border-radius: 10px;
         background-color: #ffc107;
@@ -367,63 +501,45 @@
         align-items: center;
         justify-content: center;
     }
-    
     .nav-tabs .nav-link {
         color: #495057;
         font-weight: 500;
     }
-    
     .nav-tabs .nav-link.active {
         color: var(--primary-blue);
         font-weight: 600;
         border-bottom: 2px solid var(--primary-blue);
     }
-    
-    .rating-stars i {
-        font-size: 1.2rem;
-        margin-right: 2px;
-    }
-    
     .btn-primary {
         background-color: var(--primary-blue);
         border-color: var(--primary-blue);
     }
-    
     .btn-primary:hover {
         background-color: #1e5fd8;
         border-color: #1e5fd8;
     }
-    
     .btn-success {
         background-color: var(--primary-orange);
         border-color: var(--primary-orange);
     }
-    
     .btn-success:hover {
         background-color: #e55a17;
         border-color: #e55a17;
     }
-    
     .badge.bg-warning {
         color: #212529 !important;
     }
-    
-    /* Card hover effect for reviews */
     .card {
         transition: transform 0.2s, box-shadow 0.2s;
     }
-    
     .card:hover {
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
-    
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         .display-4 {
             font-size: 2.5rem;
         }
-        
         .col-md-3.text-center {
             margin-bottom: 20px;
         }
