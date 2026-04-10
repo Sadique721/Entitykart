@@ -80,13 +80,3 @@ D --> E[Repositories]
 E --> F[(MySQL Database)]
 B --> G[Cloudinary]
 B --> H[Authorize.Net]
-
-👨‍💻 Author
-
-Md Sadique Amin
-💼 Full Stack Developer | 🤖 AI Engineer | 📊 Data Scientist
-
-📧 mdsadiqueamin721786@gmail.com
-
-📱 +91 9318302850
-🔗 GitHub: https://github.com/Sadique721
