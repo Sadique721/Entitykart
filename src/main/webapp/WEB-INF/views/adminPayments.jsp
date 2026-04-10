@@ -95,11 +95,34 @@
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="all">
                     <div class="table-container">
+                        <!-- Pagination and Sorting Controls -->
+                        <div class="row mb-3">
+                            <div class="col-md-6 d-flex align-items-center">
+                                <label class="me-2 mb-0">Show</label>
+                                <select id="entriesPerPage" class="form-select form-select-sm w-auto" onchange="changeEntriesPerPage()">
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span class="ms-2">entries</span>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                                    <input type="text" id="paymentSearchInput" class="form-control" placeholder="Search payments..." onkeyup="filterPayments()">
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Payment ID</th>
+                                        <th style="cursor: pointer;" onclick="sortBy('paymentId')">
+                                            Payment ID 
+                                            <i class="fas fa-sort" id="sort-icon-paymentId"></i>
+                                        </th>
                                         <th>Order ID</th>
                                         <th>Customer</th>
                                         <th>Amount</th>
@@ -110,9 +133,9 @@
                                         <th style="min-width: 120px;">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="paymentsTableBody">
                                     <c:forEach var="payment" items="${payments}">
-                                        <tr id="payment-row-${payment.paymentId}">
+                                        <tr id="payment-row-${payment.paymentId}" data-payment-id="${payment.paymentId}" data-payment-status="${payment.paymentStatus}" data-payment-mode="${payment.paymentMode}" data-amount="${payment.amount}" data-order-id="${payment.orderId}" data-transaction-ref="${payment.transactionRef}" data-payment-date="${payment.paymentDate}">
                                             <td><strong>#${payment.paymentId}</strong></td>
                                             <td>
                                                 <a href="/admin/order/details?orderId=${payment.orderId}" class="text-decoration-none">
@@ -193,7 +216,7 @@
                                     </c:forEach>
                                     
                                     <c:if test="${empty payments}">
-                                        <tr>
+                                        <tr id="noPaymentsRow">
                                             <td colspan="9" class="text-center py-4">
                                                 <p class="text-muted mb-0">No payments found</p>
                                             </td>
@@ -201,6 +224,25 @@
                                     </c:if>
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <!-- Pagination Footer -->
+                        <div class="row mt-3 align-items-center" id="paginationFooter">
+                            <div class="col-md-6">
+                                <span id="showingInfo" class="text-muted">Showing 0 to 0 of 0 entries</span>
+                            </div>
+                            <div class="col-md-6">
+                                <nav>
+                                    <ul class="pagination justify-content-end mb-0" id="paginationList">
+                                        <li class="page-item disabled" id="prevPageBtn">
+                                            <a class="page-link" href="javascript:void(0)" onclick="goToPage(currentPage - 1)">Previous</a>
+                                        </li>
+                                        <li class="page-item disabled" id="nextPageBtn">
+                                            <a class="page-link" href="javascript:void(0)" onclick="goToPage(currentPage + 1)">Next</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -294,10 +336,228 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentStatus = null;
     let statusModal = null;
     
+    // Pagination and Sorting Variables
+    let allPaymentsData = [];
+    let filteredPaymentsData = [];
+    let currentPage = 1;
+    let entriesPerPage = 10;
+    let currentSortColumn = 'paymentId';
+    let currentSortOrder = 'asc';
+    
     document.addEventListener('DOMContentLoaded', function() {
         statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
         loadTabData();
+        loadAllPaymentsData();
     });
+    
+    // Load all payments data from the existing table rows
+    function loadAllPaymentsData() {
+        var rows = document.querySelectorAll('#paymentsTableBody tr');
+        allPaymentsData = [];
+        
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (row.id === 'noPaymentsRow') continue;
+            
+            var paymentId = parseInt(row.getAttribute('data-payment-id'));
+            var orderId = row.getAttribute('data-order-id');
+            var amount = parseFloat(row.getAttribute('data-amount'));
+            var paymentMode = row.getAttribute('data-payment-mode');
+            var transactionRef = row.getAttribute('data-transaction-ref');
+            var paymentStatus = row.getAttribute('data-payment-status');
+            var paymentDate = row.getAttribute('data-payment-date');
+            
+            // Get customer text
+            var customerCell = row.cells[2];
+            var customerText = customerCell ? customerCell.innerText.trim() : 'N/A';
+            
+            allPaymentsData.push({
+                row: row,
+                paymentId: paymentId,
+                orderId: orderId,
+                customer: customerText,
+                amount: amount,
+                paymentMode: paymentMode,
+                transactionRef: transactionRef,
+                paymentStatus: paymentStatus,
+                paymentDate: paymentDate
+            });
+        }
+        
+        filteredPaymentsData = allPaymentsData.slice();
+        sortData();
+        renderPaginationAndTable();
+    }
+    
+    // Sort data by payment ID
+    function sortData() {
+        filteredPaymentsData.sort(function(a, b) {
+            var valA = a[currentSortColumn];
+            var valB = b[currentSortColumn];
+            
+            if (currentSortColumn === 'paymentId') {
+                if (currentSortOrder === 'asc') return valA - valB;
+                else return valB - valA;
+            } else {
+                if (currentSortOrder === 'asc') return String(valA).localeCompare(String(valB));
+                else return String(valB).localeCompare(String(valA));
+            }
+        });
+    }
+    
+    // Sort by column (only payment ID is implemented)
+    function sortBy(column) {
+        if (column === 'paymentId') {
+            if (currentSortOrder === 'asc') {
+                currentSortOrder = 'desc';
+            } else {
+                currentSortOrder = 'asc';
+            }
+            
+            // Update sort icon
+            var icon = document.getElementById('sort-icon-paymentId');
+            if (icon) {
+                icon.className = currentSortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            }
+            
+            sortData();
+            currentPage = 1;
+            renderPaginationAndTable();
+        }
+    }
+    
+    // Filter payments based on search input
+    function filterPayments() {
+        var searchTerm = document.getElementById('paymentSearchInput').value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            filteredPaymentsData = allPaymentsData.slice();
+        } else {
+            filteredPaymentsData = allPaymentsData.filter(function(payment) {
+                return payment.paymentId.toString().includes(searchTerm) ||
+                       payment.orderId.toString().includes(searchTerm) ||
+                       payment.paymentMode.toLowerCase().includes(searchTerm) ||
+                       payment.paymentStatus.toLowerCase().includes(searchTerm) ||
+                       (payment.transactionRef && payment.transactionRef.toLowerCase().includes(searchTerm));
+            });
+        }
+        
+        sortData();
+        currentPage = 1;
+        renderPaginationAndTable();
+    }
+    
+    // Change entries per page
+    function changeEntriesPerPage() {
+        entriesPerPage = parseInt(document.getElementById('entriesPerPage').value);
+        currentPage = 1;
+        renderPaginationAndTable();
+    }
+    
+    // Render table with pagination
+    function renderPaginationAndTable() {
+        if (!filteredPaymentsData || filteredPaymentsData.length === 0) {
+            // Hide all rows and show no data message
+            for (var i = 0; i < allPaymentsData.length; i++) {
+                allPaymentsData[i].row.style.display = 'none';
+            }
+            document.getElementById('showingInfo').innerHTML = 'Showing 0 to 0 of 0 entries';
+            document.getElementById('paginationFooter').style.display = 'none';
+            return;
+        }
+        
+        document.getElementById('paginationFooter').style.display = 'flex';
+        
+        var startIndex = (currentPage - 1) * entriesPerPage;
+        var endIndex = Math.min(startIndex + entriesPerPage, filteredPaymentsData.length);
+        
+        // Hide all rows first
+        for (var i = 0; i < allPaymentsData.length; i++) {
+            allPaymentsData[i].row.style.display = 'none';
+        }
+        
+        // Show only rows for current page
+        for (var i = startIndex; i < endIndex; i++) {
+            filteredPaymentsData[i].row.style.display = '';
+        }
+        
+        // Update showing info
+        var start = filteredPaymentsData.length === 0 ? 0 : startIndex + 1;
+        var end = Math.min(endIndex, filteredPaymentsData.length);
+        document.getElementById('showingInfo').innerHTML = 'Showing ' + start + ' to ' + end + ' of ' + filteredPaymentsData.length + ' entries';
+        
+        renderPaginationControls();
+    }
+    
+    // Render pagination controls
+    function renderPaginationControls() {
+        var totalPages = Math.ceil(filteredPaymentsData.length / entriesPerPage);
+        var paginationList = document.getElementById('paginationList');
+        
+        if (totalPages <= 1) {
+            paginationList.innerHTML = '<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">1</a></li>';
+            document.getElementById('prevPageBtn').classList.add('disabled');
+            document.getElementById('nextPageBtn').classList.add('disabled');
+            return;
+        }
+        
+        // Update prev/next buttons
+        if (currentPage === 1) {
+            document.getElementById('prevPageBtn').classList.add('disabled');
+        } else {
+            document.getElementById('prevPageBtn').classList.remove('disabled');
+        }
+        
+        if (currentPage === totalPages) {
+            document.getElementById('nextPageBtn').classList.add('disabled');
+        } else {
+            document.getElementById('nextPageBtn').classList.remove('disabled');
+        }
+        
+        // Generate page numbers
+        var pageNumbersHtml = '';
+        var maxVisiblePages = 5;
+        var startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        var endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        if (startPage > 1) {
+            pageNumbersHtml += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(1)">1</a></li>';
+            if (startPage > 2) {
+                pageNumbersHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+        }
+        
+        for (var i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
+                pageNumbersHtml += '<li class="page-item active"><a class="page-link" href="javascript:void(0)">' + i + '</a></li>';
+            } else {
+                pageNumbersHtml += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(' + i + ')">' + i + '</a></li>';
+            }
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                pageNumbersHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+            pageNumbersHtml += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(' + totalPages + ')">' + totalPages + '</a></li>';
+        }
+        
+        paginationList.innerHTML = pageNumbersHtml;
+    }
+    
+    // Go to specific page
+    function goToPage(page) {
+        var totalPages = Math.ceil(filteredPaymentsData.length / entriesPerPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderPaginationAndTable();
+        // Scroll to top of table
+        document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     
     function refreshStats() {
         fetch('/api/admin/payment-summary')
@@ -426,6 +686,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         actionCell.innerHTML = '<a href="/admin/payment/details?paymentId=' + currentPaymentId + '" ' +
                                               'class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>';
                     }
+                    
+                    // Update the data in allPaymentsData
+                    for (var i = 0; i < allPaymentsData.length; i++) {
+                        if (allPaymentsData[i].paymentId === currentPaymentId) {
+                            allPaymentsData[i].paymentStatus = currentStatus;
+                            allPaymentsData[i].row.setAttribute('data-payment-status', currentStatus);
+                            break;
+                        }
+                    }
+                    
+                    // Refresh filter and pagination
+                    filterPayments();
                 }
                 
                 refreshStats();
@@ -542,6 +814,28 @@ document.addEventListener('DOMContentLoaded', function() {
     .toast {
         min-width: 250px;
         margin-bottom: 10px;
+    }
+    
+    .pagination {
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #2874f0;
+        border-color: #2874f0;
+    }
+    
+    .pagination .page-link {
+        color: #2874f0;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: #e9ecef;
+    }
+    
+    th i.fa-sort, th i.fa-sort-up, th i.fa-sort-down {
+        margin-left: 5px;
+        color: #999;
     }
 </style>
 

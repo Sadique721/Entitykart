@@ -1,0 +1,16 @@
+.git
+.gitignore
+README.md
+.env
+*.log
+target/
+Dockerfile
+.dockerignore
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+.mvn/
+mvnw
+mvnw.cmd

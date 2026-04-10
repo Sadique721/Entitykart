@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: entitykart-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 0721
+      MYSQL_DATABASE: entitykart
+      MYSQL_USER: entitykart_user
+      MYSQL_PASSWORD: entitykart_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - entitykart-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+
+  app:
+    build: .
+    container_name: entitykart-app
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: entitykart
+      DB_USERNAME: root
+      DB_PASSWORD: 0721
+      SERVER_PORT: 9999
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      AUTHORIZE_NET_API_LOGIN_ID: ${AUTHORIZE_NET_API_LOGIN_ID}
+      AUTHORIZE_NET_TRANSACTION_KEY: ${AUTHORIZE_NET_TRANSACTION_KEY}
+    ports:
+      - "9999:9999"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - entitykart-network
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+
+networks:
+  entitykart-network:
+    driver: bridge

@@ -96,7 +96,7 @@
                                         </a>
                                     </h5>
                                     <span class="badge ${review.rating >= 4 ? 'bg-success' : (review.rating >= 3 ? 'bg-warning' : 'bg-danger')}">
-                                        ${review.rating} ★
+                                        ${review.rating}
                                     </span>
                                 </div>
                                 <div class="card-body">

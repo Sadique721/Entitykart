@@ -221,13 +221,57 @@
                 </div>
             </div>
             
-            <!-- Recent Payments Table -->
+            <!-- NEW: Monthly Revenue Trend Graph -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Monthly Revenue Trend</h5>
+                            <div class="btn-group" role="group" id="monthlyPeriodButtons">
+                                <button class="btn btn-sm btn-outline-primary active" onclick="loadMonthlyRevenue(6, this)">Last 6 Months</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadMonthlyRevenue(12, this)">Last 12 Months</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadMonthlyRevenue(24, this)">Last 24 Months</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="position: relative; height: 350px;">
+                                <canvas id="monthlyRevenueChart"></canvas>
+                            </div>
+                            <div class="text-center mt-3 text-muted small" id="monthlyChartInfo">
+                                Select a period to view monthly revenue trends
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Payments Table with Pagination -->
             <div class="row">
                 <div class="col-12">
                     <div class="table-container">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="mb-0"><i class="fas fa-clock me-2 text-primary"></i>Recent Payments</h5>
                             <a href="/admin/payments" class="btn btn-sm btn-primary">View All Payments</a>
+                        </div>
+                        
+                        <!-- Pagination Controls -->
+                        <div class="row mb-3">
+                            <div class="col-md-6 d-flex align-items-center">
+                                <label class="me-2 mb-0">Show</label>
+                                <select id="entriesPerPage" class="form-select form-select-sm w-auto" onchange="changeEntriesPerPage()">
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span class="ms-2">entries</span>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                                    <input type="text" id="paymentSearchInput" class="form-control" placeholder="Search payments..." onkeyup="filterPayments()">
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="table-responsive">
@@ -245,96 +289,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="recentPaymentsBody">
-                                    <c:forEach var="payment" items="${payments}">
-                                        <tr id="payment-row-${payment.paymentId}">
-                                            <td><strong>#${payment.paymentId}</strong></td>
-                                            <td>
-                                                <a href="/admin/order/details?orderId=${payment.orderId}" class="text-decoration-none">
-                                                    #${payment.orderId}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <c:set var="customerFound" value="false" />
-                                                <c:forEach var="order" items="${orders}">
-                                                    <c:if test="${order.orderId eq payment.orderId}">
-                                                        Customer #${order.customerId}
-                                                        <c:set var="customerFound" value="true" />
-                                                    </c:if>
-                                                </c:forEach>
-                                                <c:if test="${not customerFound}">
-                                                    <span class="text-muted">N/A</span>
-                                                </c:if>
-                                            </td>
-                                            <td><i class="fas fa-rupee-sign"></i> <fmt:formatNumber value="${payment.amount}" pattern="#,##0.00"/></td>
-                                            <td>
-                                                <span class="badge 
-                                                    <c:choose>
-                                                        <c:when test="${payment.paymentMode eq 'COD'}">bg-success</c:when>
-                                                        <c:when test="${payment.paymentMode eq 'CARD'}">bg-warning</c:when>
-                                                        <c:when test="${payment.paymentMode eq 'UPI'}">bg-info</c:when>
-                                                        <c:when test="${payment.paymentMode eq 'NET_BANKING'}">bg-secondary</c:when>
-                                                        <c:otherwise>bg-primary</c:otherwise>
-                                                    </c:choose>">
-                                                    ${payment.paymentMode}
-                                                </span>
-                                            </td>
-                                            <td><span class="text-muted small">${payment.transactionRef}</span></td>
-                                            <td>
-                                                <span class="badge payment-status 
-                                                    <c:choose>
-                                                        <c:when test="${payment.paymentStatus eq 'SUCCESS'}">bg-success</c:when>
-                                                        <c:when test="${payment.paymentStatus eq 'FAILED'}">bg-danger</c:when>
-                                                        <c:otherwise>bg-warning</c:otherwise>
-                                                    </c:choose>">
-                                                    ${payment.paymentStatus}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <c:if test="${payment.paymentDate != null}">
-                                                     ${payment.paymentDate}
-                                                </c:if>
-                                            </td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <a href="/admin/payment/details?paymentId=${payment.paymentId}" 
-                                                       class="btn btn-sm btn-outline-primary" title="View Details">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    
-                                                    <c:if test="${payment.paymentStatus eq 'PENDING'}">
-                                                        <button class="btn btn-sm btn-outline-success" 
-                                                                onclick="updateStatus(${payment.paymentId}, 'SUCCESS')"
-                                                                title="Accept Payment">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-danger" 
-                                                                onclick="updateStatus(${payment.paymentId}, 'FAILED')"
-                                                                title="Reject Payment">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
-                                                    </c:if>
-                                                    
-                                                    <c:if test="${payment.paymentStatus eq 'FAILED'}">
-                                                        <button class="btn btn-sm btn-outline-warning" 
-                                                                onclick="retryPayment(${payment.paymentId})"
-                                                                title="Retry Payment">
-                                                            <i class="fas fa-redo-alt"></i>
-                                                        </button>
-                                                    </c:if>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                    
-                                    <c:if test="${empty payments}">
-                                        <tr>
-                                            <td colspan="9" class="text-center py-4">
-                                                <p class="text-muted mb-0">No payments found</p>
-                                            </td>
-                                        </tr>
-                                    </c:if>
-                                </tbody>
-                                <tbody id="recentPaymentsBody">
                                     <tr>
                                         <td colspan="8" class="text-center py-4">
                                             <div class="spinner-border text-primary" role="status">
@@ -344,6 +298,25 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <!-- Pagination Footer -->
+                        <div class="row mt-3 align-items-center" id="paginationFooter">
+                            <div class="col-md-6">
+                                <span id="showingInfo" class="text-muted">Showing 0 to 0 of 0 entries</span>
+                            </div>
+                            <div class="col-md-6">
+                                <nav>
+                                    <ul class="pagination justify-content-end mb-0" id="paginationList">
+                                        <li class="page-item disabled" id="prevPageBtn">
+                                            <a class="page-link" href="javascript:void(0)" onclick="goToPage(currentPage - 1)">Previous</a>
+                                        </li>
+                                        <li class="page-item disabled" id="nextPageBtn">
+                                            <a class="page-link" href="javascript:void(0)" onclick="goToPage(currentPage + 1)">Next</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -358,36 +331,252 @@
     // Chart instances
     let revenueChart = null;
     let statusChart = null;
+    let monthlyRevenueChart = null;
     
     // Current period
     let currentPeriod = 7;
+    let currentMonthlyPeriod = 6;
+    
+    // Pagination variables
+    let allPaymentsData = [];
+    let filteredPaymentsData = [];
+    let currentPage = 1;
+    let entriesPerPage = 10;
     
     // Load data on page load
     document.addEventListener('DOMContentLoaded', function() {
         // Load all data
         loadPaymentSummary();
-        loadRecentPayments();
+        loadAllPaymentsData();
         loadDailyRevenue(currentPeriod);
+        loadMonthlyRevenue(currentMonthlyPeriod);
     });
     
     // Refresh all data
     function refreshData() {
         showToast('info', 'Refreshing payment data...');
         loadPaymentSummary();
-        loadRecentPayments();
+        loadAllPaymentsData();
         loadDailyRevenue(currentPeriod);
+        loadMonthlyRevenue(currentMonthlyPeriod);
     }
     
-    // Load payment summary from API
-    function loadPaymentSummary() {
-        fetch('/api/admin/payment-summary')
-            .then(response => {
+    // Load all payments data
+    function loadAllPaymentsData() {
+        fetch('/api/admin/recent-payments')
+            .then(function(response) {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 return response.json();
             })
-            .then(data => {
+            .then(function(payments) {
+                allPaymentsData = payments || [];
+                filteredPaymentsData = allPaymentsData.slice();
+                currentPage = 1;
+                renderPaymentTable();
+                renderPagination();
+            })
+            .catch(function(error) {
+                console.error('Error loading payments:', error);
+                document.getElementById('recentPaymentsBody').innerHTML = 
+                    '<tr><td colspan="8" class="text-center py-4 text-danger">Failed to load payments</td></tr>';
+                document.getElementById('paginationFooter').style.display = 'none';
+            });
+    }
+    
+    // Filter payments based on search input
+    function filterPayments() {
+        var searchTerm = document.getElementById('paymentSearchInput').value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            filteredPaymentsData = allPaymentsData.slice();
+        } else {
+            filteredPaymentsData = allPaymentsData.filter(function(payment) {
+                return (payment.paymentId && payment.paymentId.toString().includes(searchTerm)) ||
+                       (payment.orderId && payment.orderId.toString().includes(searchTerm)) ||
+                       (payment.mode && payment.mode.toLowerCase().includes(searchTerm)) ||
+                       (payment.status && payment.status.toLowerCase().includes(searchTerm)) ||
+                       (payment.transactionRef && payment.transactionRef.toLowerCase().includes(searchTerm));
+            });
+        }
+        
+        currentPage = 1;
+        renderPaymentTable();
+        renderPagination();
+    }
+    
+    // Change entries per page
+    function changeEntriesPerPage() {
+        entriesPerPage = parseInt(document.getElementById('entriesPerPage').value);
+        currentPage = 1;
+        renderPaymentTable();
+        renderPagination();
+    }
+    
+    // Render payment table with pagination
+    function renderPaymentTable() {
+        var tbody = document.getElementById('recentPaymentsBody');
+        
+        if (!filteredPaymentsData || filteredPaymentsData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No payments found</td></tr>';
+            document.getElementById('showingInfo').innerHTML = 'Showing 0 to 0 of 0 entries';
+            return;
+        }
+        
+        var startIndex = (currentPage - 1) * entriesPerPage;
+        var endIndex = Math.min(startIndex + entriesPerPage, filteredPaymentsData.length);
+        var pageData = filteredPaymentsData.slice(startIndex, endIndex);
+        
+        var html = '';
+        for (var i = 0; i < pageData.length; i++) {
+            var payment = pageData[i];
+            var statusClass = '';
+            var statusText = payment.status || 'PENDING';
+            
+            if (statusText === 'SUCCESS') {
+                statusClass = 'bg-success';
+                statusText = 'SUCCESS';
+            } else if (statusText === 'FAILED') {
+                statusClass = 'bg-danger';
+                statusText = 'FAILED';
+            } else {
+                statusClass = 'bg-warning';
+                statusText = 'PENDING';
+            }
+            
+            var modeIcon = '';
+            var modeText = payment.mode || 'N/A';
+            if (modeText === 'COD') modeIcon = '<i class="fas fa-money-bill-wave me-1"></i>';
+            else if (modeText === 'CARD') modeIcon = '<i class="fas fa-credit-card me-1"></i>';
+            else if (modeText === 'UPI') modeIcon = '<i class="fas fa-mobile-alt me-1"></i>';
+            else if (modeText === 'NET_BANKING') modeIcon = '<i class="fas fa-university me-1"></i>';
+            
+            var formattedAmount = new Intl.NumberFormat('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(payment.amount);
+            
+            // Build actions HTML safely
+            var actionsHtml = '<div class="action-buttons">' +
+                '<a href="/admin/payment/details?paymentId=' + payment.paymentId + '" class="btn btn-sm btn-outline-primary" title="View Details">' +
+                '<i class="fas fa-eye"></i></a>';
+            
+            if (payment.status === 'PENDING') {
+                actionsHtml += '<button class="btn btn-sm btn-outline-success" onclick="updateStatus(' + payment.paymentId + ', \'SUCCESS\')" title="Accept Payment">' +
+                    '<i class="fas fa-check"></i></button>' +
+                    '<button class="btn btn-sm btn-outline-danger" onclick="updateStatus(' + payment.paymentId + ', \'FAILED\')" title="Reject Payment">' +
+                    '<i class="fas fa-times"></i></button>';
+            }
+            
+            if (payment.status === 'FAILED') {
+                actionsHtml += '<button class="btn btn-sm btn-outline-warning" onclick="retryPayment(' + payment.paymentId + ')" title="Retry Payment">' +
+                    '<i class="fas fa-redo-alt"></i></button>';
+            }
+            
+            actionsHtml += '</div>';
+            
+            html += '<tr>' +
+                '<td><strong>#' + payment.paymentId + '</strong></td>' +
+                '<td><a href="/admin/order/details?orderId=' + payment.orderId + '" class="text-decoration-none">#' + payment.orderId + '</a></td>' +
+                '<td><i class="fas fa-rupee-sign"></i> ' + formattedAmount + '</td>' +
+                '<td><span class="badge bg-info">' + modeIcon + modeText + '</span></td>' +
+                '<td><span class="text-muted small font-monospace">' + (payment.transactionRef || 'N/A') + '</span></td>' +
+                '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+                '<td>' + (payment.paymentDateTime || payment.date || '-') + '</td>' +
+                '<td>' + actionsHtml + '</td>' +
+                '</tr>';
+        }
+        
+        tbody.innerHTML = html;
+        
+        // Update showing info
+        var start = filteredPaymentsData.length === 0 ? 0 : startIndex + 1;
+        var end = Math.min(endIndex, filteredPaymentsData.length);
+        document.getElementById('showingInfo').innerHTML = 'Showing ' + start + ' to ' + end + ' of ' + filteredPaymentsData.length + ' entries';
+    }
+    
+    // Render pagination controls
+    function renderPagination() {
+        var totalPages = Math.ceil(filteredPaymentsData.length / entriesPerPage);
+        var paginationList = document.getElementById('paginationList');
+        
+        if (totalPages <= 1) {
+            paginationList.innerHTML = '<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">1</a></li>';
+            document.getElementById('prevPageBtn').classList.add('disabled');
+            document.getElementById('nextPageBtn').classList.add('disabled');
+            return;
+        }
+        
+        // Update prev/next buttons
+        if (currentPage === 1) {
+            document.getElementById('prevPageBtn').classList.add('disabled');
+        } else {
+            document.getElementById('prevPageBtn').classList.remove('disabled');
+        }
+        
+        if (currentPage === totalPages) {
+            document.getElementById('nextPageBtn').classList.add('disabled');
+        } else {
+            document.getElementById('nextPageBtn').classList.remove('disabled');
+        }
+        
+        // Generate page numbers
+        var pageNumbersHtml = '';
+        var maxVisiblePages = 5;
+        var startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        var endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        if (startPage > 1) {
+            pageNumbersHtml += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(1)">1</a></li>';
+            if (startPage > 2) {
+                pageNumbersHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+        }
+        
+        for (var i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
+                pageNumbersHtml += '<li class="page-item active"><a class="page-link" href="javascript:void(0)">' + i + '</a></li>';
+            } else {
+                pageNumbersHtml += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(' + i + ')">' + i + '</a></li>';
+            }
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                pageNumbersHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+            pageNumbersHtml += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(' + totalPages + ')">' + totalPages + '</a></li>';
+        }
+        
+        paginationList.innerHTML = pageNumbersHtml;
+    }
+    
+    // Go to specific page
+    function goToPage(page) {
+        var totalPages = Math.ceil(filteredPaymentsData.length / entriesPerPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderPaymentTable();
+        renderPagination();
+        // Scroll to top of table
+        document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // Load payment summary from API
+    function loadPaymentSummary() {
+        fetch('/api/admin/payment-summary')
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(function(data) {
                 // Update summary cards with animation
                 animateNumber('totalPayments', data.totalPayments || 0);
                 animateNumber('successfulPayments', data.successfulPayments || 0);
@@ -395,24 +584,24 @@
                 document.getElementById('successRate').textContent = (data.successRate || 0).toFixed(1) + '%';
                 
                 // Format total revenue
-                const totalRevenue = data.totalRevenue || 0;
+                var totalRevenue = data.totalRevenue || 0;
                 document.getElementById('totalRevenue').innerHTML = '<i class="fas fa-rupee-sign"></i> ' + 
                     new Intl.NumberFormat('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(totalRevenue);
                 
                 // Update progress bars
-                const total = data.totalPayments || 1;
-                const successBar = document.getElementById('successBar');
-                const failedBar = document.getElementById('failedBar');
-                const rateBar = document.getElementById('rateBar');
+                var total = data.totalPayments || 1;
+                var successBar = document.getElementById('successBar');
+                var failedBar = document.getElementById('failedBar');
+                var rateBar = document.getElementById('rateBar');
                 
                 if (successBar) successBar.style.width = ((data.successfulPayments / total) * 100) + '%';
                 if (failedBar) failedBar.style.width = ((data.failedPayments / total) * 100) + '%';
                 if (rateBar) rateBar.style.width = (data.successRate || 0) + '%';
                 
                 // Update status legend
-                const legendSuccess = document.querySelector('#statusLegend .col-4:first-child .badge');
-                const legendFailed = document.querySelector('#statusLegend .col-4:nth-child(2) .badge');
-                const legendPending = document.querySelector('#statusLegend .col-4:last-child .badge');
+                var legendSuccess = document.querySelector('#statusLegend .col-4:first-child .badge');
+                var legendFailed = document.querySelector('#statusLegend .col-4:nth-child(2) .badge');
+                var legendPending = document.querySelector('#statusLegend .col-4:last-child .badge');
                 
                 if (legendSuccess) legendSuccess.textContent = data.successfulPayments || 0;
                 if (legendFailed) legendFailed.textContent = data.failedPayments || 0;
@@ -424,7 +613,7 @@
                 // Update revenue by mode
                 updateRevenueByMode(data.revenueByMode || {});
             })
-            .catch(error => {
+            .catch(function(error) {
                 console.error('Error loading payment summary:', error);
                 showToast('error', 'Failed to load payment summary');
             });
@@ -432,18 +621,18 @@
     
     // Animate number change
     function animateNumber(elementId, newValue) {
-        const element = document.getElementById(elementId);
-        const oldValue = parseInt(element.textContent) || 0;
+        var element = document.getElementById(elementId);
+        var oldValue = parseInt(element.textContent) || 0;
         
         if (oldValue === newValue) return;
         
-        let start = null;
-        const duration = 500; // 500ms animation
+        var start = null;
+        var duration = 500;
         
-        const step = (timestamp) => {
+        function step(timestamp) {
             if (!start) start = timestamp;
-            const progress = Math.min((timestamp - start) / duration, 1);
-            const current = Math.floor(oldValue + (progress * (newValue - oldValue)));
+            var progress = Math.min((timestamp - start) / duration, 1);
+            var current = Math.floor(oldValue + (progress * (newValue - oldValue)));
             element.textContent = current;
             
             if (progress < 1) {
@@ -451,149 +640,65 @@
             } else {
                 element.textContent = newValue;
             }
-        };
+        }
         
         window.requestAnimationFrame(step);
     }
     
-    // Load recent payments
-    function loadRecentPayments() {
-        fetch('/api/admin/recent-payments')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(payments => {
-                const tbody = document.getElementById('recentPaymentsBody');
-                
-                if (!payments || payments.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No recent payments found</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                payments.forEach(payment => {
-                    let statusClass = '';
-                    let statusText = payment.status || 'PENDING';
-                    
-                    if (statusText === 'SUCCESS') {
-                        statusClass = 'bg-success';
-                        statusText = 'SUCCESS';
-                    } else if (statusText === 'FAILED') {
-                        statusClass = 'bg-danger';
-                        statusText = 'FAILED';
-                    } else {
-                        statusClass = 'bg-warning';
-                        statusText = 'PENDING';
-                    }
-                    
-                    let modeIcon = '';
-                    if (payment.mode === 'COD') modeIcon = '<i class="fas fa-money-bill-wave me-1"></i>';
-                    else if (payment.mode === 'CARD') modeIcon = '<i class="fas fa-credit-card me-1"></i>';
-                    else if (payment.mode === 'UPI') modeIcon = '<i class="fas fa-mobile-alt me-1"></i>';
-                    else if (payment.mode === 'NET_BANKING') modeIcon = '<i class="fas fa-university me-1"></i>';
-                    
-                    const formattedAmount = new Intl.NumberFormat('en-IN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    }).format(payment.amount);
-                    
-                    html += `
-                        <tr>
-                            <td><strong>#${payment.paymentId}</strong></td>
-                            <td><a href="/admin/order/details?orderId=${payment.orderId}" class="text-decoration-none">#${payment.orderId}</a></td>
-                            <td><i class="fas fa-rupee-sign"></i> ${formattedAmount}</td>
-                            <td><span class="badge bg-info">${modeIcon}${payment.mode || 'N/A'}</span></td>
-                            <td><span class="text-muted small font-monospace">${payment.transactionRef || 'N/A'}</span></td>
-                            <td><span class="badge ${statusClass}">${statusText}</span></td>
-                            <td>${payment.paymentDateTime || payment.date || '-'}</td>
-                            <td>
-                                <a href="/admin/payment/details?paymentId=${payment.paymentId}" class="btn btn-sm btn-outline-primary" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                tbody.innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Error loading recent payments:', error);
-                document.getElementById('recentPaymentsBody').innerHTML = 
-                    '<tr><td colspan="8" class="text-center py-4 text-danger">Failed to load recent payments</td></tr>';
-            });
-    }
-    
     // Load daily revenue for specified days
-    function loadDailyRevenue(days, button = null) {
+    function loadDailyRevenue(days, button) {
         // Update active button if provided
         if (button) {
-            document.querySelectorAll('#periodButtons .btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            var buttons = document.querySelectorAll('#periodButtons .btn');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
             button.classList.add('active');
             currentPeriod = days;
         }
         
         // Update date range text
-        const endDate = new Date();
-        const startDate = new Date();
+        var endDate = new Date();
+        var startDate = new Date();
         startDate.setDate(startDate.getDate() - (days - 1));
         
         document.getElementById('chartDateRange').textContent = 
-            `Showing data from ${startDate.toLocaleDateString('en-IN', {day: '2-digit', month: 'short'})} to ${endDate.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})}`;
+            'Showing data from ' + startDate.toLocaleDateString('en-IN', {day: '2-digit', month: 'short'}) + 
+            ' to ' + endDate.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
         
         fetch('/api/admin/payment-summary')
-            .then(response => response.json())
-            .then(data => {
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
                 if (data.dailyRevenue && data.dailyRevenue.length > 0) {
-                    // Use real data
                     updateRevenueChart(data.dailyRevenue);
                 } else {
-                    // Generate realistic mock data based on days
-                    const mockData = generateMockDailyRevenue(days);
+                    var mockData = generateMockDailyRevenue(days);
                     updateRevenueChart(mockData);
                 }
             })
-            .catch(() => {
-                // Use mock data if API fails
-                const mockData = generateMockDailyRevenue(days);
+            .catch(function() {
+                var mockData = generateMockDailyRevenue(days);
                 updateRevenueChart(mockData);
             });
     }
     
     // Generate realistic mock daily revenue data
     function generateMockDailyRevenue(days) {
-        const data = [];
-        const today = new Date();
+        var data = [];
+        var today = new Date();
+        var baseRevenue = 110000;
         
-        // Generate realistic revenue pattern with slight upward trend
-        let baseRevenue = 110000;
-        
-        for (let i = days - 1; i >= 0; i--) {
-            const date = new Date(today);
+        for (var i = days - 1; i >= 0; i--) {
+            var date = new Date(today);
             date.setDate(date.getDate() - i);
             
-            // Add some variation
-            const variation = (Math.random() * 20000) - 10000;
-            const revenue = Math.max(50000, Math.round((baseRevenue + variation) / 1000) * 1000);
-            
-            // Slight upward trend for recent days
+            var variation = (Math.random() * 20000) - 10000;
+            var revenue = Math.max(50000, Math.round((baseRevenue + variation) / 1000) * 1000);
             baseRevenue += 2000;
             
             data.push({
-                date: date.toLocaleDateString('en-IN', { 
-                    day: '2-digit', 
-                    month: 'short'
-                }),
-                fullDate: date.toLocaleDateString('en-IN', { 
-                    day: '2-digit', 
-                    month: 'short', 
-                    year: 'numeric' 
-                }),
+                date: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+                fullDate: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
                 revenue: revenue
             });
         }
@@ -603,16 +708,15 @@
     
     // Update revenue chart
     function updateRevenueChart(dailyData) {
-        const ctx = document.getElementById('revenueChart').getContext('2d');
+        var ctx = document.getElementById('revenueChart').getContext('2d');
         
-        // Destroy existing chart if it exists
         if (revenueChart) {
             revenueChart.destroy();
         }
         
-        const labels = dailyData.map(d => d.date);
-        const values = dailyData.map(d => d.revenue);
-        const fullDates = dailyData.map(d => d.fullDate || d.date);
+        var labels = dailyData.map(function(d) { return d.date; });
+        var values = dailyData.map(function(d) { return d.revenue; });
+        var fullDates = dailyData.map(function(d) { return d.fullDate || d.date; });
         
         revenueChart = new Chart(ctx, {
             type: 'line',
@@ -640,9 +744,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         titleColor: '#fff',
@@ -660,38 +762,140 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
                         ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString('en-IN');
-                            }
+                            callback: function(value) { return '₹' + value.toLocaleString('en-IN'); }
                         }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
+                        grid: { display: false },
+                        ticks: { maxRotation: 45, minRotation: 45 }
+                    }
+                },
+                animation: { duration: 800, easing: 'easeInOutQuart' }
+            }
+        });
+    }
+    
+    // Load monthly revenue data
+    function loadMonthlyRevenue(months, button) {
+        if (button) {
+            var buttons = document.querySelectorAll('#monthlyPeriodButtons .btn');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            button.classList.add('active');
+            currentMonthlyPeriod = months;
+        }
+        
+        document.getElementById('monthlyChartInfo').textContent = 'Showing revenue trend for the last ' + months + ' months';
+        
+        var monthlyData = generateMockMonthlyRevenue(months);
+        updateMonthlyRevenueChart(monthlyData);
+    }
+    
+    // Generate mock monthly revenue data
+    function generateMockMonthlyRevenue(months) {
+        var data = [];
+        var today = new Date();
+        
+        var seasonalFactors = {
+            0: 0.8, 1: 0.75, 2: 0.85, 3: 0.9, 4: 0.85, 5: 0.8,
+            6: 0.85, 7: 0.9, 8: 1.0, 9: 1.2, 10: 1.3, 11: 1.25
+        };
+        
+        var baseRevenue = 800000;
+        
+        for (var i = months - 1; i >= 0; i--) {
+            var date = new Date(today);
+            date.setMonth(date.getMonth() - i);
+            var monthIndex = date.getMonth();
+            
+            var revenue = baseRevenue * seasonalFactors[monthIndex];
+            var recencyFactor = 1 + ((months - i) * 0.02);
+            revenue = revenue * recencyFactor;
+            var variation = 0.85 + (Math.random() * 0.3);
+            revenue = Math.round(revenue * variation / 10000) * 10000;
+            
+            data.push({
+                month: date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
+                revenue: Math.max(300000, revenue)
+            });
+        }
+        
+        return data;
+    }
+    
+    // Update monthly revenue chart
+    function updateMonthlyRevenueChart(monthlyData) {
+        var ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
+        
+        if (monthlyRevenueChart) {
+            monthlyRevenueChart.destroy();
+        }
+        
+        var labels = monthlyData.map(function(d) { return d.month; });
+        var values = monthlyData.map(function(d) { return d.revenue; });
+        
+        var gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, '#2874f0');
+        gradient.addColorStop(1, '#6c5ce7');
+        
+        monthlyRevenueChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monthly Revenue (₹)',
+                    data: values,
+                    backgroundColor: gradient,
+                    borderColor: '#2874f0',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: function(context) {
+                                return '₹' + context.raw.toLocaleString('en-IN');
+                            }
                         }
                     }
                 },
-                animation: {
-                    duration: 800,
-                    easing: 'easeInOutQuart'
-                }
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: {
+                            callback: function(value) { return '₹' + (value / 100000).toFixed(1) + 'L'; }
+                        },
+                        title: { display: true, text: 'Revenue (in Lakhs ₹)', color: '#666' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { maxRotation: 45, minRotation: 45 }
+                    }
+                },
+                animation: { duration: 800, easing: 'easeInOutQuart' },
+                elements: { bar: { borderRadius: 8 } }
             }
         });
     }
     
     // Update status chart
     function updateStatusChart(success, failed, pending) {
-        const ctx = document.getElementById('statusChart').getContext('2d');
+        var ctx = document.getElementById('statusChart').getContext('2d');
         
-        // Destroy existing chart if it exists
         if (statusChart) {
             statusChart.destroy();
         }
@@ -712,104 +916,79 @@
                 maintainAspectRatio: false,
                 cutout: '65%',
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = success + failed + pending;
-                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${label}: ${value} (${percentage}%)`;
+                                var label = context.label || '';
+                                var value = context.raw || 0;
+                                var total = success + failed + pending;
+                                var percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return label + ': ' + value + ' (' + percentage + '%)';
                             }
                         }
                     }
                 },
-                animation: {
-                    animateRotate: true,
-                    animateScale: true,
-                    duration: 800
-                }
+                animation: { animateRotate: true, animateScale: true, duration: 800 }
             }
         });
     }
     
     // Update revenue by payment mode
     function updateRevenueByMode(revenueByMode) {
-        const container = document.getElementById('revenueByModeContainer');
+        var container = document.getElementById('revenueByModeContainer');
         
         if (!revenueByMode || Object.keys(revenueByMode).length === 0) {
             container.innerHTML = '<div class="col-12 text-center py-4">No revenue data available</div>';
             return;
         }
         
-        let totalRevenue = 0;
-        const revenueArray = [];
+        var totalRevenue = 0;
+        var revenueArray = [];
         
-        for (let mode in revenueByMode) {
+        for (var mode in revenueByMode) {
             totalRevenue += revenueByMode[mode];
-            revenueArray.push({
-                mode: mode,
-                revenue: revenueByMode[mode]
-            });
+            revenueArray.push({ mode: mode, revenue: revenueByMode[mode] });
         }
         
-        // Sort by revenue descending
-        revenueArray.sort((a, b) => b.revenue - a.revenue);
+        revenueArray.sort(function(a, b) { return b.revenue - a.revenue; });
         
-        let html = '';
-        revenueArray.forEach(item => {
-            const percentage = totalRevenue > 0 ? ((item.revenue / totalRevenue) * 100).toFixed(1) : 0;
+        var html = '';
+        for (var i = 0; i < revenueArray.length; i++) {
+            var item = revenueArray[i];
+            var percentage = totalRevenue > 0 ? ((item.revenue / totalRevenue) * 100).toFixed(1) : 0;
             
-            let icon = 'fa-credit-card';
-            let color = 'primary';
+            var icon = 'fa-credit-card';
+            var color = 'primary';
             
-            if (item.mode === 'COD') {
-                icon = 'fa-money-bill-wave';
-                color = 'success';
-            } else if (item.mode === 'UPI') {
-                icon = 'fa-mobile-alt';
-                color = 'info';
-            } else if (item.mode === 'CARD') {
-                icon = 'fa-credit-card';
-                color = 'warning';
-            } else if (item.mode === 'NET_BANKING') {
-                icon = 'fa-university';
-                color = 'secondary';
-            }
+            if (item.mode === 'COD') { icon = 'fa-money-bill-wave'; color = 'success'; }
+            else if (item.mode === 'UPI') { icon = 'fa-mobile-alt'; color = 'info'; }
+            else if (item.mode === 'CARD') { icon = 'fa-credit-card'; color = 'warning'; }
+            else if (item.mode === 'NET_BANKING') { icon = 'fa-university'; color = 'secondary'; }
             
-            const formattedRevenue = new Intl.NumberFormat('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+            var formattedRevenue = new Intl.NumberFormat('en-IN', {
+                minimumFractionDigits: 2, maximumFractionDigits: 2
             }).format(item.revenue);
             
-            html += `
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge bg-${color}"><i class="fas ${icon} me-1"></i>${item.mode}</span>
-                                <span class="text-${color} fw-bold">${percentage}%</span>
-                            </div>
-                            <h5 class="mb-0"><i class="fas fa-rupee-sign"></i> ${formattedRevenue}</h5>
-                            <div class="progress mt-2" style="height: 5px;">
-                                <div class="progress-bar bg-${color}" style="width: ${percentage}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
+            html += '<div class="col-lg-3 col-md-4 col-sm-6 mb-3">' +
+                '<div class="card h-100 border-0 shadow-sm">' +
+                '<div class="card-body">' +
+                '<div class="d-flex justify-content-between align-items-center mb-2">' +
+                '<span class="badge bg-' + color + '"><i class="fas ' + icon + ' me-1"></i>' + item.mode + '</span>' +
+                '<span class="text-' + color + ' fw-bold">' + percentage + '%</span>' +
+                '</div>' +
+                '<h5 class="mb-0"><i class="fas fa-rupee-sign"></i> ' + formattedRevenue + '</h5>' +
+                '<div class="progress mt-2" style="height: 5px;">' +
+                '<div class="progress-bar bg-' + color + '" style="width: ' + percentage + '%"></div>' +
+                '</div></div></div></div>';
+        }
         
         container.innerHTML = html;
     }
     
     // Show toast notification
     function showToast(type, message) {
-        // Check if toast container exists
-        let toastContainer = document.getElementById('toastContainer');
+        var toastContainer = document.getElementById('toastContainer');
         if (!toastContainer) {
             toastContainer = document.createElement('div');
             toastContainer.id = 'toastContainer';
@@ -818,42 +997,66 @@
             document.body.appendChild(toastContainer);
         }
         
-        const toastId = 'toast-' + Date.now();
-        const bgColor = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
-        const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+        var toastId = 'toast-' + Date.now();
+        var bgColor = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
+        var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
         
-        const toast = document.createElement('div');
+        var toast = document.createElement('div');
         toast.id = toastId;
-        toast.className = `toast align-items-center text-white ${bgColor} border-0`;
+        toast.className = 'toast align-items-center text-white ' + bgColor + ' border-0';
         toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-        
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas ${icon} me-2"></i>
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
+        toast.innerHTML = '<div class="d-flex">' +
+            '<div class="toast-body"><i class="fas ' + icon + ' me-2"></i>' + message + '</div>' +
+            '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+            '</div>';
         
         toastContainer.appendChild(toast);
-        
-        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+        var bsToast = new bootstrap.Toast(toast, { delay: 3000 });
         bsToast.show();
         
-        toast.addEventListener('hidden.bs.toast', function() {
-            toast.remove();
+        toast.addEventListener('hidden.bs.toast', function() { toast.remove(); });
+    }
+    
+    // Update payment status
+    function updateStatus(paymentId, status) {
+        showToast('info', 'Updating payment ' + paymentId + ' to ' + status + '...');
+        fetch('/api/admin/payment/' + paymentId + '/status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: status })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            showToast('success', 'Payment ' + paymentId + ' updated to ' + status);
+            refreshData();
+        })
+        .catch(function(error) {
+            console.error('Error updating status:', error);
+            showToast('error', 'Failed to update payment status');
+        });
+    }
+    
+    // Retry payment
+    function retryPayment(paymentId) {
+        showToast('info', 'Retrying payment ' + paymentId + '...');
+        fetch('/api/admin/payment/' + paymentId + '/retry', { method: 'POST' })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            showToast('success', 'Payment ' + paymentId + ' retry initiated');
+            refreshData();
+        })
+        .catch(function(error) {
+            console.error('Error retrying payment:', error);
+            showToast('error', 'Failed to retry payment');
         });
     }
     
     // Auto-refresh data every 60 seconds
-    let refreshInterval = setInterval(function() {
+    var refreshInterval = setInterval(function() {
         if (document.visibilityState === 'visible') {
             loadPaymentSummary();
-            loadRecentPayments();
+            loadAllPaymentsData();
+            loadMonthlyRevenue(currentMonthlyPeriod);
         }
     }, 60000);
     
@@ -924,11 +1127,15 @@
     }
     
     .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
         z-index: 9999;
     }
     
     .toast {
         min-width: 250px;
+        margin-bottom: 10px;
     }
     
     .card {
@@ -946,6 +1153,29 @@
         font-size: 0.85em;
     }
     
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .pagination {
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #2874f0;
+        border-color: #2874f0;
+    }
+    
+    .pagination .page-link {
+        color: #2874f0;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: #e9ecef;
+    }
+    
     @media (max-width: 768px) {
         .stat-card {
             margin-bottom: 15px;
@@ -958,6 +1188,16 @@
         
         .btn-group .btn {
             flex: 1;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .action-buttons .btn-sm {
+            padding: 2px 6px;
+            font-size: 11px;
         }
     }
 </style>

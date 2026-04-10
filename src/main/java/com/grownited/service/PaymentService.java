@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.grownited.entity.PaymentEntity;
@@ -29,8 +30,14 @@ import net.authorize.api.controller.base.ApiOperationBase;
 @Service
 public class PaymentService {
 
-    private final String apiLoginId = "89g9AHbvJ";
-    private final String transactionKey = "3c99q2SFnD92pE64";
+    @Value("${authorize.net.api-login-id:89g9AHbvJ}")
+    private String apiLoginId;
+    
+    @Value("${authorize.net.transaction-key:3c99q2SFnD92pE64}")
+    private String transactionKey;
+    
+    @Value("${authorize.net.environment:sandbox}")
+    private String environment;
 
     @Autowired
     private PaymentRepository paymentRepository;
@@ -46,7 +53,12 @@ public class PaymentService {
         // Format expiry as "MMYY"
         String expiry = String.format("%02d%02d", Integer.parseInt(expiryMonth), Integer.parseInt(expiryYear.substring(2)));
 
-        ApiOperationBase.setEnvironment(Environment.SANDBOX);
+        // Set environment based on property
+        if ("production".equalsIgnoreCase(environment)) {
+            ApiOperationBase.setEnvironment(Environment.PRODUCTION);
+        } else {
+            ApiOperationBase.setEnvironment(Environment.SANDBOX);
+        }
 
         MerchantAuthenticationType merchantAuthentication = new MerchantAuthenticationType();
         merchantAuthentication.setName(apiLoginId);
@@ -92,9 +104,8 @@ public class PaymentService {
                 payment.setGatewayTransactionId(result.getTransId());
                 payment.setGatewayResponseCode(result.getResponseCode());
                 payment.setGatewayResponseText(result.getMessages().getMessage().get(0).getDescription());
-                payment.setTransactionRef(result.getTransId());  // use transaction ID as reference
+                payment.setTransactionRef(result.getTransId());
             } else {
-                // Transaction failed at gateway level
                 payment.setPaymentStatus(PaymentEntity.PaymentGatewayStatus.FAILED);
                 if (result.getErrors() != null) {
                     payment.setGatewayResponseCode(result.getErrors().getError().get(0).getErrorCode());
@@ -102,7 +113,6 @@ public class PaymentService {
                 }
             }
         } else {
-            // API level error
             payment.setPaymentStatus(PaymentEntity.PaymentGatewayStatus.FAILED);
             if (response != null) {
                 payment.setGatewayResponseCode(response.getMessages().getMessage().get(0).getCode());
@@ -133,7 +143,6 @@ public class PaymentService {
         payment.setAmount(amount);
         payment.setPaymentMode(PaymentEntity.PaymentMode.valueOf(paymentMode));
         payment.setTransactionRef("TXN" + System.currentTimeMillis());
-        // Simulate 95% success rate
         boolean success = Math.random() < 0.95;
         payment.setPaymentStatus(success ? PaymentEntity.PaymentGatewayStatus.SUCCESS : PaymentEntity.PaymentGatewayStatus.FAILED);
         if (success) {

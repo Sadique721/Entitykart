@@ -1,5 +1,6 @@
 package com.grownited.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -42,5 +43,11 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
     
     // Check if customer has any orders
     boolean existsByCustomerId(Integer customerId);
+    
+    @Query("SELECT COUNT(o) FROM OrderEntity o WHERE o.orderDate BETWEEN :start AND :end")
+    long countByOrderDateBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM OrderEntity o WHERE o.paymentStatus = 'PAID' AND o.orderDate BETWEEN :start AND :end")
+    double getTotalRevenueBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
     
 }

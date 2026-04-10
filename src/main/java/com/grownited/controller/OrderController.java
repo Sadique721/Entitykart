@@ -1,5 +1,6 @@
 package com.grownited.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,22 +64,50 @@ public class OrderController {
     private static final Logger log = LoggerFactory.getLogger(OrderController.class);
     
     
-    // ==================== CUSTOMER SIDE ====================
-    
-    // View my orders
-    @GetMapping("/orders")
-    public String myOrders(HttpSession session, Model model) {
-        
-        UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        if (currentUser == null) {
-            return "redirect:/login";
-        }
-        
-        List<OrderEntity> orders = orderRepository.findByCustomerIdOrderByOrderDateDesc(currentUser.getUserId());
-        model.addAttribute("orders", orders);
-        
-        return "myOrders";
-    }
+ // ==================== CUSTOMER SIDE ====================
+
+ // View my orders
+ @GetMapping("/orders")
+ public String myOrders(HttpSession session, Model model) {
+     UserEntity currentUser = (UserEntity) session.getAttribute("user");
+     if (currentUser == null) {
+         return "redirect:/login";
+     }
+
+     // Get all orders for the current user
+     List<OrderEntity> orders = orderRepository.findByCustomerIdOrderByOrderDateDesc(currentUser.getUserId());
+
+     // Build a map: orderId -> list of order items with product details
+     Map<Integer, List<Map<String, Object>>> orderDetailsMap = new HashMap<>();
+
+     for (OrderEntity order : orders) {
+         // Fetch order details with product info
+         List<Object[]> details = orderDetailRepository.findOrderDetailsWithProductInfo(order.getOrderId());
+         List<Map<String, Object>> itemList = new ArrayList<>();
+
+         for (Object[] row : details) {
+             OrderDetailEntity detail = (OrderDetailEntity) row[0];
+             String productName = (String) row[1];
+             String productImage = (String) row[2];
+
+             Map<String, Object> item = new HashMap<>();
+             item.put("productId", detail.getProductId());
+             item.put("productName", productName);
+             item.put("productImage", productImage);
+             item.put("quantity", detail.getQuantity());
+             item.put("price", detail.getPrice());
+             item.put("subtotal", detail.getSubtotal());
+
+             itemList.add(item);
+         }
+         orderDetailsMap.put(order.getOrderId(), itemList);
+     }
+
+     model.addAttribute("orders", orders);
+     model.addAttribute("orderDetailsMap", orderDetailsMap);
+
+     return "myOrders";
+ }
     
     // View order details - COMPLETE IMPLEMENTATION
     @GetMapping("/order/details")

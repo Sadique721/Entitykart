@@ -75,9 +75,6 @@
                                     <a href="/viewUser?userId=${user.userId}" class="btn btn-sm btn-info" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="/editUser?userId=${user.userId}" class="btn btn-sm btn-warning" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
                                     <a href="/deleteUser?userId=${user.userId}" 
                                        class="btn btn-sm btn-danger" 
                                        onclick="return confirmDelete(event, 'user')"

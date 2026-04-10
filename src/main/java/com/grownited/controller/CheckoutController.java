@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.grownited.entity.AddressEntity;
@@ -70,7 +71,6 @@ public class CheckoutController {
     @Autowired
     private UserRepository userRepository;
     
- // Also add Logger for error logging
     private static final Logger log = LoggerFactory.getLogger(CheckoutController.class);
     
     // ==================== CHECKOUT PAGE ====================
@@ -87,7 +87,6 @@ public class CheckoutController {
             return "redirect:/login";
         }
         
-        // Get user addresses
         List<AddressEntity> addresses = addressRepository.findByUserId(currentUser.getUserId());
         if (addresses.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Please add a delivery address before checkout!");
@@ -98,7 +97,6 @@ public class CheckoutController {
         Integer itemCount = 0;
         
         if (productId != null) {
-            // Direct buy now - single product
             Optional<ProductEntity> productOpt = productRepository.findById(productId);
             if (productOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Product not found!");
@@ -106,8 +104,6 @@ public class CheckoutController {
             }
             
             ProductEntity product = productOpt.get();
-            
-            // Check stock
             if (product.getStockQuantity() < quantity) {
                 redirectAttributes.addFlashAttribute("error", 
                     "Insufficient stock! Available: " + product.getStockQuantity());
@@ -122,14 +118,12 @@ public class CheckoutController {
             model.addAttribute("quantity", quantity);
             model.addAttribute("product", product);
         } else {
-            // Cart checkout
             List<CartEntity> cartItems = cartRepository.findByCustomerId(currentUser.getUserId());
             if (cartItems.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Your cart is empty!");
                 return "redirect:/cart";
             }
             
-            // Validate stock for all items
             for (CartEntity item : cartItems) {
                 Optional<ProductEntity> productOpt = productRepository.findById(item.getProductId());
                 if (productOpt.isEmpty() || productOpt.get().getStockQuantity() < item.getQuantity()) {
@@ -140,7 +134,6 @@ public class CheckoutController {
                 subtotal += item.getPrice() * item.getQuantity();
             }
             itemCount = cartItems.size();
-            
             model.addAttribute("cartItems", cartItems);
         }
         
@@ -194,7 +187,6 @@ public class CheckoutController {
         int directQuantity = 0;
         
         if (productId != null) {
-            // Direct buy
             Optional<ProductEntity> productOpt = productRepository.findById(productId);
             if (productOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Product not found!");
@@ -213,7 +205,6 @@ public class CheckoutController {
                 redirectAttributes.addFlashAttribute("error", "Your cart is empty!");
                 return "redirect:/cart";
             }
-            // Validate stock for all items
             for (CartEntity item : cartItems) {
                 Optional<ProductEntity> prodOpt = productRepository.findById(item.getProductId());
                 if (prodOpt.isEmpty() || prodOpt.get().getStockQuantity() < item.getQuantity()) {
@@ -235,7 +226,6 @@ public class CheckoutController {
         }
         Double totalAmount = subtotal + 40.0 + (subtotal * 0.18);
 
-        // ==================== NON‑RAZORPAY FLOW (CARD + SIMULATED MODES) ====================
         // ===== 3. Create order with status PENDING_PAYMENT =====
         OrderEntity order = new OrderEntity();
         order.setCustomerId(currentUser.getUserId());
@@ -254,7 +244,7 @@ public class CheckoutController {
             }
         }
 
-        // ===== 5. Process payment (CARD or simulated) =====
+        // ===== 5. Process payment =====
         boolean paymentSuccess = false;
         PaymentEntity payment = null;
 
@@ -272,15 +262,18 @@ public class CheckoutController {
                 paymentSuccess = payment.getPaymentStatus() == PaymentEntity.PaymentGatewayStatus.SUCCESS;
             } catch (Exception e) {
                 paymentSuccess = false;
-                e.printStackTrace();
+                log.error("Payment processing error: {}", e.getMessage());
             }
         } else {
-            // Simulate other payment modes (COD, UPI, etc.)
             paymentSuccess = simulatePaymentProcessing(paymentMode);
             payment = new PaymentEntity();
             payment.setOrderId(order.getOrderId());
             payment.setAmount(totalAmount);
-            payment.setPaymentMode(PaymentEntity.PaymentMode.valueOf(paymentMode));
+            try {
+                payment.setPaymentMode(PaymentEntity.PaymentMode.valueOf(paymentMode));
+            } catch (IllegalArgumentException e) {
+                payment.setPaymentMode(PaymentEntity.PaymentMode.COD);
+            }
             payment.setTransactionRef("TXN" + System.currentTimeMillis());
             payment.setPaymentStatus(paymentSuccess ? PaymentEntity.PaymentGatewayStatus.SUCCESS : PaymentEntity.PaymentGatewayStatus.FAILED);
             if (paymentSuccess) {
@@ -289,7 +282,7 @@ public class CheckoutController {
             paymentRepository.save(payment);
         }
 
-        // ===== 6. If payment successful, deduct stock, update order status, clear cart =====
+        // ===== 6. If payment successful, complete order =====
         if (paymentSuccess) {
             // Deduct stock
             if (directProduct != null) {
@@ -299,38 +292,40 @@ public class CheckoutController {
                     stockService.deductStock(item.getProductId(), item.getQuantity());
                 }
             }
+            
             // Update order
             order.setOrderStatus(OrderEntity.OrderStatus.PLACED);
             order.setPaymentStatus(OrderEntity.PaymentStatus.PAID);
             orderRepository.save(order);
-            // Clear cart if it was a cart order
+            
+            // Clear cart
             if (cartItems != null) {
                 cartRepository.deleteByCustomerId(currentUser.getUserId());
             }
             
-            // ========== SEND ORDER CONFIRMATION EMAIL ==========
+            // ========== SEND ORDER CONFIRMATION EMAIL (ENHANCED) ==========
             try {
                 UserEntity customer = userRepository.findById(currentUser.getUserId()).orElse(null);
                 if (customer != null) {
-                    // Fetch order details (needed for email)
                     List<OrderDetailEntity> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
                     
-                    // Build product names map for email
                     Map<Integer, String> productNames = new HashMap<>();
                     for (OrderDetailEntity detail : orderDetails) {
                         productRepository.findById(detail.getProductId())
                             .ifPresent(product -> productNames.put(detail.getProductId(), product.getProductName()));
                     }
                     
-                    mailerService.sendOrderConfirmationEmail(customer, order, orderDetails, productNames);
-                    log.info("Order confirmation email sent for order #{}", order.getOrderId());
-                } else {
-                    log.warn("Customer not found for order #{}", order.getOrderId());
+                    AddressEntity address = addressRepository.findById(addressId).orElse(null);
+                    PaymentEntity paymentEntity = paymentRepository.findByOrderId(order.getOrderId()).orElse(null);
+                    
+                    mailerService.sendOrderConfirmationEmail(customer, order, orderDetails, productNames, address, paymentEntity);
+                    
+                    log.info("Order confirmation email sent successfully for order #{}", order.getOrderId());
                 }
             } catch (Exception e) {
                 log.error("Failed to send order confirmation email for order #{}: {}", order.getOrderId(), e.getMessage());
             }
-            // ===================================================
+            // ==============================================================
             
             redirectAttributes.addFlashAttribute("success", "Order placed successfully! Order ID: #" + order.getOrderId());
             return "redirect:/order/confirmation?orderId=" + order.getOrderId();
@@ -355,16 +350,16 @@ public class CheckoutController {
     }
     
     private boolean simulatePaymentProcessing(String paymentMode) {
-        // In a real application, integrate actual payment gateways
+        // 95% success rate for simulation
         return Math.random() < 0.95;
     }
     
     // ==================== CART COUNT AJAX ====================
     
     @GetMapping("/cart/count")
-    @org.springframework.web.bind.annotation.ResponseBody
-    public java.util.Map<String, Object> getCartCount(HttpSession session) {
-        java.util.Map<String, Object> response = new java.util.HashMap<>();
+    @ResponseBody
+    public Map<String, Object> getCartCount(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
         UserEntity currentUser = (UserEntity) session.getAttribute("user");
         if (currentUser != null) {
             Long count = cartRepository.countByCustomerId(currentUser.getUserId());

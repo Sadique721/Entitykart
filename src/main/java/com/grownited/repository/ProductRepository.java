@@ -17,6 +17,9 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
     // Find products by category
     Page<ProductEntity> findByCategoryId(Integer categoryId, Pageable pageable);
     
+    @Query("SELECT DISTINCT p.userId FROM ProductEntity p")
+    List<Integer> findDistinctUserIds();
+    
     // Find products by subcategory (subCategoryId is String in your entity)
     Page<ProductEntity> findBySubCategoryId(String subCategoryId, Pageable pageable);
     

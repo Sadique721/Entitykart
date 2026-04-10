@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;  // ADD THIS IMPORT
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -47,6 +49,8 @@ public class UserController {
     @Autowired
     private Cloudinary cloudinary;
 
+    // ADD THIS LOGGER DECLARATION
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     // ========================= USER REGISTRATION =========================
 
@@ -467,12 +471,20 @@ public class UserController {
         user.setResetToken(null);         // Clear reset token
         user.setResetTokenExpiry(null);   // Clear expiry
         userRepository.save(user);
+        
+     // ========== ADD PASSWORD CHANGE CONFIRMATION EMAIL ==========
+        try {
+            mailerService.sendPasswordChangeConfirmationEmail(user);
+            logger.info("Password change confirmation email sent to: {}", user.getEmail());
+        } catch (Exception e) {
+            logger.error("Failed to send password change confirmation email: {}", e.getMessage());
+        }
+        // =============================================================
 
         model.addAttribute("success", "Password updated successfully! Please login with your new password.");
 
         return "login";
     }
-    
     
     // ========================= MY PROFILE (SHORTCUT) =========================
     

@@ -1782,28 +1782,36 @@
             <div class="stat-icon" style="color: #2874f0;">
                 <i class="fas fa-box-open"></i>
             </div>
-            <div class="stat-count"><fmt:formatNumber value="<%= totalProducts %>" type="number" groupingUsed="true" /></div>
+            <div class="stat-count">
+                <fmt:formatNumber value="${productList.size()}" type="number" groupingUsed="true" />
+            </div>
             <div class="stat-label">Products</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="color: #26a541;">
                 <i class="fas fa-smile"></i>
             </div>
-            <div class="stat-count"><fmt:formatNumber value="<%= happyCustomers %>" type="number" groupingUsed="true" />+</div>
+            <div class="stat-count">
+                <fmt:formatNumber value="${totalUsers}" type="number" groupingUsed="true" />+
+            </div>
             <div class="stat-label">Happy Customers</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="color: #fb641b;">
                 <i class="fas fa-map-marker-alt"></i>
             </div>
-            <div class="stat-count">500+</div>
+            <div class="stat-count">
+                <fmt:formatNumber value="${totalCities}" type="number" groupingUsed="true" />+
+            </div>
             <div class="stat-label">Cities Served</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="color: #ff9f00;">
                 <i class="fas fa-store"></i>
             </div>
-            <div class="stat-count">25K+</div>
+            <div class="stat-count">
+                <fmt:formatNumber value="${totalSellers}" type="number" groupingUsed="true" />+
+            </div>
             <div class="stat-label">Verified Sellers</div>
         </div>
     </div>

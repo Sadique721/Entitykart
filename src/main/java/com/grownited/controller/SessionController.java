@@ -1,21 +1,29 @@
 package com.grownited.controller;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.grownited.entity.CategoryEntity;
 import com.grownited.entity.OrderEntity;
 import com.grownited.entity.ProductEntity;
 import com.grownited.entity.SubCategoryEntity;
 import com.grownited.entity.UserEntity;
+import com.grownited.repository.AddressRepository;
 import com.grownited.repository.CategoryRepository;
 import com.grownited.repository.OrderRepository;
 import com.grownited.repository.ProductRepository;
@@ -24,14 +32,10 @@ import com.grownited.repository.SubCategoryRepository;
 import com.grownited.repository.UserRepository;
 
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.util.Map;
-import java.util.HashMap;
 
 @Controller
 public class SessionController {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(SessionController.class);
 
     @Autowired
@@ -54,31 +58,35 @@ public class SessionController {
 
     @Autowired
     private ReturnRefundRepository returnRefundRepository;
+
+    @Autowired
+    private AddressRepository addressRepository;
+
     // ========================= DASHBOARD (ADMIN ONLY) =========================
     @GetMapping("/dashboard")
     public String adminDashboard(HttpSession session, Model model) {
-        
         UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        
-        if (currentUser == null) {
+        if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
             return "redirect:/login";
-        }
-        
-        if (!"ADMIN".equals(currentUser.getRole())) {
-            return "redirect:/index";
         }
 
         try {
-            // Load admin dashboard data
             List<UserEntity> userList = userRepository.findAll();
             List<CategoryEntity> categoryList = categoryRepository.findAll();
             List<ProductEntity> productList = productRepository.findAll();
             List<SubCategoryEntity> subCategories = subCategoryRepository.findAll();
-            
-            // Admin statistics
-            long totalUsers = userList.size();
-            long totalProducts = productList.size();
+
+            // ---------- DYNAMIC STATS ----------
+            long totalUsers = userRepository.count();
+            long totalCities = addressRepository.countDistinctCities();
+            long totalSellers = userRepository.countByRole("SELLER");
+            if (totalSellers == 0) {
+                totalSellers = productRepository.findDistinctUserIds().size(); // fallback
+            }
+
+            long totalProducts = productRepository.count();
             long totalOrders = orderRepository.count();
+
             long placedOrders = orderRepository.countByOrderStatus(OrderEntity.OrderStatus.PLACED);
             long confirmedOrders = orderRepository.countByOrderStatus(OrderEntity.OrderStatus.CONFIRMED);
             long shippedOrders = orderRepository.countByOrderStatus(OrderEntity.OrderStatus.SHIPPED);
@@ -86,24 +94,32 @@ public class SessionController {
             long cancelledOrders = orderRepository.countByOrderStatus(OrderEntity.OrderStatus.CANCELLED);
             long returnedOrders = orderRepository.countByOrderStatus(OrderEntity.OrderStatus.RETURNED);
             long pendingOrders = placedOrders + confirmedOrders;
-            Double totalRevenue = orderRepository.getTotalRevenue();
-            
-            // Recent orders for admin
+
+            Double revenue = orderRepository.getTotalRevenue();
+            double totalRevenue = (revenue != null) ? revenue : 0.0;
+
             List<OrderEntity> recentOrders = orderRepository.findTop10ByOrderByOrderDateDesc();
-            List<Object[]> stats = returnRefundRepository.getReturnStatistics();
+
+            // Return statistics
+            List<Object[]> returnStats = returnRefundRepository.getReturnStatistics();
             Map<String, Long> statistics = new HashMap<>();
-            for (Object[] stat : stats) {
+            for (Object[] stat : returnStats) {
                 statistics.put(stat[0].toString(), (Long) stat[1]);
             }
 
+            // Calculate in‑stock and low‑stock counts for products
+            long inStockCount = productRepository.findInStockProducts(org.springframework.data.domain.Pageable.unpaged()).getTotalElements();
+            long lowStockCount = productRepository.findLowStockProducts(org.springframework.data.domain.Pageable.unpaged()).getTotalElements();
+
+            // ---------- ADD TO MODEL ----------
+            model.addAttribute("totalCities", totalCities);
+            model.addAttribute("totalSellers", totalSellers);
             model.addAttribute("statistics", statistics);
             model.addAttribute("userList", userList);
             model.addAttribute("categoryList", categoryList);
             model.addAttribute("productList", productList);
             model.addAttribute("subCategories", subCategories);
             model.addAttribute("currentUser", currentUser);
-            
-            // Statistics
             model.addAttribute("totalUsers", totalUsers);
             model.addAttribute("totalProducts", totalProducts);
             model.addAttribute("totalOrders", totalOrders);
@@ -114,14 +130,18 @@ public class SessionController {
             model.addAttribute("cancelledOrders", cancelledOrders);
             model.addAttribute("returnedOrders", returnedOrders);
             model.addAttribute("pendingOrders", pendingOrders);
-            model.addAttribute("totalRevenue", totalRevenue != null ? totalRevenue : 0.0);
+            model.addAttribute("totalRevenue", totalRevenue);
             model.addAttribute("recentOrders", recentOrders);
+            model.addAttribute("inStockCount", inStockCount);
+            model.addAttribute("lowStockCount", lowStockCount);
+
+            // Optional: month‑over‑month percentages (simplified – use static text in JSP)
+            // If you want real percentages, you need to add repository methods – not included here.
 
         } catch (Exception e) {
             logger.error("Error loading admin dashboard: {}", e.getMessage());
             model.addAttribute("error", "Unable to load dashboard data");
         }
-
         return "dashboard";
     }
 
@@ -129,41 +149,38 @@ public class SessionController {
     @GetMapping(value = {"/", "/index", "/home"})
     @Transactional(readOnly = true)
     public String homePage(Model model, HttpSession session) {
-        
         UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        
         try {
-            // Load public data with null safety
-            List<CategoryEntity> categoryList = categoryRepository != null ? 
-                categoryRepository.findAll() : List.of();
-            List<ProductEntity> productList = productRepository != null ? 
-                productRepository.findAll() : List.of();
-            
-            // Log for debugging (optional, can be removed in production)
-            logger.debug("Home page loaded - Categories: {}, Products: {}", 
-                categoryList.size(), productList.size());
-            
+            List<CategoryEntity> categoryList = categoryRepository.findAll();
+            List<ProductEntity> productList = productRepository.findAll();
+
+            long totalUsers = userRepository.count();
+            long totalCities = addressRepository.countDistinctCities();
+            long totalSellers = userRepository.countByRole("SELLER");
+            if (totalSellers == 0) {
+                totalSellers = productRepository.findDistinctUserIds().size();
+            }
+
             model.addAttribute("categoryList", categoryList);
             model.addAttribute("productList", productList);
-            
-            
+            model.addAttribute("totalUsers", totalUsers);
+            model.addAttribute("totalCities", totalCities);
+            model.addAttribute("totalSellers", totalSellers);
+
         } catch (Exception e) {
-            logger.error("Error loading home page data: {}", e.getMessage());
+            logger.error("Error loading home page: {}", e.getMessage());
             model.addAttribute("categoryList", List.of());
             model.addAttribute("productList", List.of());
             model.addAttribute("error", "Unable to load some content");
         }
-        
         model.addAttribute("currentUser", currentUser);
-        
         return "index";
     }
 
     // ========================= AUTH PAGES =========================
     @GetMapping("/signup")
     public String signupPage(HttpSession session) {
-        UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        if (currentUser != null) {
+        if (session.getAttribute("user") != null) {
             return "redirect:/index";
         }
         return "signup";
@@ -171,8 +188,7 @@ public class SessionController {
 
     @GetMapping("/login")
     public String loginPage(HttpSession session) {
-        UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        if (currentUser != null) {
+        if (session.getAttribute("user") != null) {
             return "redirect:/index";
         }
         return "login";
@@ -180,8 +196,7 @@ public class SessionController {
 
     @GetMapping("/fp")
     public String forgotPasswordPage(HttpSession session) {
-        UserEntity currentUser = (UserEntity) session.getAttribute("user");
-        if (currentUser != null) {
+        if (session.getAttribute("user") != null) {
             return "redirect:/index";
         }
         return "fp";
@@ -189,18 +204,13 @@ public class SessionController {
 
     // ========================= AUTHENTICATION =========================
     @PostMapping("/authenticate")
-    public String authenticate(String email,
-                               String password,
-                               Model model,
-                               HttpSession session) {
-
+    public String authenticate(String email, String password, Model model, HttpSession session) {
         if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty()) {
             model.addAttribute("error", "Email and password are required");
             return "login";
         }
 
         Optional<UserEntity> optionalUser = userRepository.findByEmail(email.trim());
-
         if (optionalUser.isEmpty()) {
             logger.warn("Failed login attempt for email: {}", email);
             model.addAttribute("error", "Invalid Credentials");
@@ -208,7 +218,6 @@ public class SessionController {
         }
 
         UserEntity dbUser = optionalUser.get();
-
         if (!dbUser.getActive()) {
             logger.warn("Inactive account login attempt: {}", email);
             model.addAttribute("error", "Your account is deactivated. Please contact support.");
@@ -221,17 +230,11 @@ public class SessionController {
             return "login";
         }
 
-        // Successful login
         session.setAttribute("user", dbUser);
         session.setAttribute("lastLoginTime", new java.util.Date());
-        
         logger.info("User logged in successfully: {}", email);
 
-        if ("ADMIN".equals(dbUser.getRole())) {
-            return "redirect:/dashboard";
-        } else {
-            return "redirect:/index";
-        }
+        return "ADMIN".equals(dbUser.getRole()) ? "redirect:/dashboard" : "redirect:/index";
     }
 
     // ========================= LOGOUT =========================
