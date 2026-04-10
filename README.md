@@ -34,52 +34,6 @@
 - 📊 Admin Dashboard  
 
 ---
-
-## 🎯 Features
-
-### 👤 User Features
-- Registration & Login  
-- OTP Password Reset  
-- Profile Management  
-- Address Management  
-
-### 🛒 Shopping Features
-- Product Listing & Filters  
-- Cart (AJAX)  
-- Wishlist  
-
-### 📦 Orders
-- Checkout Process  
-- Order Tracking  
-- Order History  
-
-### 🔄 Returns
-- Return Requests  
-- Refund Processing  
-
-### ⭐ Reviews
-- Ratings & Reviews  
-- Admin Moderation  
-
-### 👨‍💼 Admin Panel
-- Dashboard Analytics  
-- Product Management  
-- Order Management  
-- User Management  
-
----
-
-## 🏗️ Architecture
-
-```mermaid
-graph TD
-A[Client Browser] --> B[Spring Boot]
-B --> C[Controllers]
-C --> D[Services]
-D --> E[Repositories]
-E --> F[(MySQL Database)]
-B --> G[Cloudinary]
-B --> H[Authorize.Net]
 Entitykart/
 ├── src/
 │   ├── main/
@@ -209,3 +163,49 @@ Entitykart/
 ├── .gitignore
 ├── pom.xml
 └── README.md
+## 🎯 Features
+
+### 👤 User Features
+- Registration & Login  
+- OTP Password Reset  
+- Profile Management  
+- Address Management  
+
+### 🛒 Shopping Features
+- Product Listing & Filters  
+- Cart (AJAX)  
+- Wishlist  
+
+### 📦 Orders
+- Checkout Process  
+- Order Tracking  
+- Order History  
+
+### 🔄 Returns
+- Return Requests  
+- Refund Processing  
+
+### ⭐ Reviews
+- Ratings & Reviews  
+- Admin Moderation  
+
+### 👨‍💼 Admin Panel
+- Dashboard Analytics  
+- Product Management  
+- Order Management  
+- User Management  
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+A[Client Browser] --> B[Spring Boot]
+B --> C[Controllers]
+C --> D[Services]
+D --> E[Repositories]
+E --> F[(MySQL Database)]
+B --> G[Cloudinary]
+B --> H[Authorize.Net]
+
