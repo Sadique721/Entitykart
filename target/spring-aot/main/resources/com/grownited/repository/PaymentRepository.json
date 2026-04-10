@@ -1,0 +1,366 @@
+{
+  "name": "com.grownited.repository.PaymentRepository",
+  "module": "JPA",
+  "type": "IMPERATIVE",
+  "methods": [
+    {
+      "name": "countByPaymentStatus",
+      "signature": "public abstract java.lang.Long com.grownited.repository.PaymentRepository.countByPaymentStatus(com.grownited.entity.PaymentEntity$PaymentGatewayStatus)",
+      "query": {
+        "query": "SELECT COUNT(p) FROM PaymentEntity p WHERE p.paymentStatus = :status"
+      }
+    },
+    {
+      "name": "deleteByOrderId",
+      "signature": "public abstract void com.grownited.repository.PaymentRepository.deleteByOrderId(java.lang.Integer)",
+      "query": {
+        "query": "SELECT p FROM PaymentEntity p WHERE p.orderId = :orderId"
+      }
+    },
+    {
+      "name": "existsByOrderId",
+      "signature": "public abstract boolean com.grownited.repository.PaymentRepository.existsByOrderId(java.lang.Integer)",
+      "query": {
+        "query": "SELECT p.paymentId paymentId FROM PaymentEntity p WHERE p.orderId = :orderId"
+      }
+    },
+    {
+      "name": "findByOrderId",
+      "signature": "public abstract java.util.Optional<com.grownited.entity.PaymentEntity> com.grownited.repository.PaymentRepository.findByOrderId(java.lang.Integer)",
+      "query": {
+        "query": "SELECT p FROM PaymentEntity p WHERE p.orderId = :orderId"
+      }
+    },
+    {
+      "name": "findByPaymentMode",
+      "signature": "public abstract java.util.List<com.grownited.entity.PaymentEntity> com.grownited.repository.PaymentRepository.findByPaymentMode(com.grownited.entity.PaymentEntity$PaymentMode)",
+      "query": {
+        "query": "SELECT p FROM PaymentEntity p WHERE p.paymentMode = :mode"
+      }
+    },
+    {
+      "name": "findByPaymentStatus",
+      "signature": "public abstract java.util.List<com.grownited.entity.PaymentEntity> com.grownited.repository.PaymentRepository.findByPaymentStatus(com.grownited.entity.PaymentEntity$PaymentGatewayStatus)",
+      "query": {
+        "query": "SELECT p FROM PaymentEntity p WHERE p.paymentStatus = :status"
+      }
+    },
+    {
+      "name": "getDailyRevenue",
+      "signature": "public abstract java.util.List<java.lang.Object[]> com.grownited.repository.PaymentRepository.getDailyRevenue(java.time.LocalDateTime,java.time.LocalDateTime)",
+      "query": {
+        "query": "SELECT DATE(p.paymentDate), COALESCE(SUM(p.amount), 0) FROM PaymentEntity p WHERE p.paymentStatus = 'SUCCESS' AND p.paymentDate BETWEEN :startDate AND :endDate GROUP BY DATE(p.paymentDate) ORDER BY DATE(p.paymentDate)"
+      }
+    },
+    {
+      "name": "getRevenueByPaymentMode",
+      "signature": "public abstract java.util.List<java.lang.Object[]> com.grownited.repository.PaymentRepository.getRevenueByPaymentMode()",
+      "query": {
+        "query": "SELECT p.paymentMode, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p WHERE p.paymentStatus = 'SUCCESS' GROUP BY p.paymentMode"
+      }
+    },
+    {
+      "name": "getTotalRevenueBetweenDates",
+      "signature": "public abstract java.lang.Double com.grownited.repository.PaymentRepository.getTotalRevenueBetweenDates(java.time.LocalDateTime,java.time.LocalDateTime)",
+      "query": {
+        "query": "SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p WHERE p.paymentStatus = 'SUCCESS' AND p.paymentDate BETWEEN :startDate AND :endDate"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAllByIdInBatch",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAllInBatch",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAllInBatch",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteInBatch",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "flush",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "getById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "getOne",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "getReferenceById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "saveAllAndFlush",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "saveAndFlush",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "count",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "delete",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAllById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "existsById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "save",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAllById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAllById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "saveAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "saveAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "count",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "exists",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findBy",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findOne",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    }
+  ]
+}

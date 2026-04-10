@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status Update - EntityKart</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #f1f3f6; padding: 20px; }
+        .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { padding: 30px; text-align: center; color: white; background: linear-gradient(135deg, #2874f0 0%, #1e5fd8 100%); }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .status-card { background: white; border-radius: 12px; padding: 25px; margin: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid; }
+        .status-icon { font-size: 48px; margin-bottom: 15px; }
+        .status-label { font-size: 14px; color: #718096; text-transform: uppercase; letter-spacing: 1px; }
+        .status-value { font-size: 24px; font-weight: 700; margin: 10px 0; }
+        .timeline { margin: 30px 20px; position: relative; }
+        .timeline-item { display: flex; align-items: center; margin-bottom: 20px; position: relative; }
+        .timeline-marker { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0; }
+        .timeline-marker.completed { background: #28a745; color: white; }
+        .timeline-marker.current { background: #2874f0; color: white; box-shadow: 0 0 0 4px rgba(40,116,240,0.2); }
+        .timeline-marker.pending { background: #e2e8f0; color: #a0aec0; }
+        .timeline-content { flex: 1; }
+        .timeline-title { font-weight: 600; margin-bottom: 3px; }
+        .timeline-date { font-size: 12px; color: #718096; }
+        .track-btn { display: block; background: #2874f0; color: white; text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; margin: 20px; font-weight: 600; }
+        .footer { background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1><span th:text="${statusIcon}">📦</span> Order Status Update</h1>
+            <p>Order #<span th:text="${orderId}">12345</span></p>
+        </div>
+        
+        <div class="content">
+            <div class="status-card" th:style="'border-top-color: ' + ${statusColor}">
+                <div class="status-icon" th:text="${statusIcon}">📦</div>
+                <div class="status-label">Current Status</div>
+                <div class="status-value" th:text="${newStatus}" th:style="'color: ' + ${statusColor}">PLACED</div>
+                <p>Your order status has been updated from <strong th:text="${oldStatus}">OLD</strong> to <strong th:text="${newStatus}">NEW</strong></p>
+            </div>
+            
+            <!-- Order Timeline -->
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker" th:classappend="${orderStatus == 'PLACED' or orderStatus == 'CONFIRMED' or orderStatus == 'SHIPPED' or orderStatus == 'DELIVERED'} ? 'completed' : 'pending'">
+                        <span>✓</span>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Order Placed</div>
+                        <div class="timeline-date" th:text="${orderDate}">dd MMM yyyy</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker" th:classappend="${orderStatus == 'CONFIRMED' or orderStatus == 'SHIPPED' or orderStatus == 'DELIVERED'} ? 'completed' : (${orderStatus == 'PLACED'} ? 'pending' : 'pending')">
+                        <span th:if="${orderStatus == 'CONFIRMED' or orderStatus == 'SHIPPED' or orderStatus == 'DELIVERED'}">✓</span>
+                        <span th:unless="${orderStatus == 'CONFIRMED' or orderStatus == 'SHIPPED' or orderStatus == 'DELIVERED'}">○</span>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Order Confirmed</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker" th:classappend="${orderStatus == 'SHIPPED' or orderStatus == 'DELIVERED'} ? 'completed' : (${orderStatus == 'CONFIRMED' or orderStatus == 'PLACED'} ? 'pending' : 'pending')">
+                        <span th:if="${orderStatus == 'SHIPPED' or orderStatus == 'DELIVERED'}">✓</span>
+                        <span th:unless="${orderStatus == 'SHIPPED' or orderStatus == 'DELIVERED'}">○</span>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Order Shipped</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker" th:classappend="${orderStatus == 'DELIVERED'} ? 'completed' : 'pending'">
+                        <span th:if="${orderStatus == 'DELIVERED'}">✓</span>
+                        <span th:unless="${orderStatus == 'DELIVERED'}">○</span>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Order Delivered</div>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="#" th:href="${trackingUrl}" class="track-btn">📦 View Order Details</a>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 EntityKart. All rights reserved.</p>
+            <p>For any assistance, contact us at support@entitykart.com</p>
+        </div>
+    </div>
+</body>
+</html>

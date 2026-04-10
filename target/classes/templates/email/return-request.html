@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Return Request Submitted - EntityKart</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #f1f3f6; padding: 20px; }
+        .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #ff9f00 0%, #e68a00 100%); padding: 30px; text-align: center; color: white; }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .return-details { background: #f8fafc; margin: 20px; padding: 20px; border-radius: 12px; }
+        .return-id { background: white; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 16px; margin: 15px 0; border: 1px solid #e2e8f0; text-align: center; }
+        .timeline { margin: 20px; }
+        .timeline-step { display: flex; align-items: center; margin-bottom: 15px; }
+        .step-marker { width: 30px; height: 30px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white; }
+        .step-marker.completed { background: #28a745; }
+        .step-marker.current { background: #ff9f00; }
+        .step-content { flex: 1; }
+        .step-title { font-weight: 600; }
+        .track-btn { display: block; background: #ff9f00; color: white; text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; margin: 20px; font-weight: 600; }
+        .footer { background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🔄 Return Request Submitted</h1>
+            <p>Order #<span th:text="${orderId}">12345</span></p>
+        </div>
+        
+        <div class="content">
+            <p style="margin: 20px;">Hello <strong th:text="${user.name}">Customer</strong>,</p>
+            <p style="margin: 0 20px;">Your return request has been submitted successfully.</p>
+            
+            <div class="return-details">
+                <h3>Return Details</h3>
+                <div class="return-id">
+                    <strong>Return ID:</strong> <span th:text="${returnId}">RET12345</span>
+                </div>
+                <p><strong>Product:</strong> <span th:text="${productName}">Product Name</span></p>
+                <p><strong>Reason:</strong> <span th:text="${reason}">Reason for return</span></p>
+            </div>
+            
+            <div class="timeline">
+                <h3 style="margin-bottom: 15px;">Return Timeline</h3>
+                <div class="timeline-step">
+                    <div class="step-marker completed">✓</div>
+                    <div class="step-content">
+                        <div class="step-title">Request Submitted</div>
+                        <small>We've received your return request</small>
+                    </div>
+                </div>
+                <div class="timeline-step">
+                    <div class="step-marker current">○</div>
+                    <div class="step-content">
+                        <div class="step-title">Under Review</div>
+                        <small>We'll review your request within 2-3 business days</small>
+                    </div>
+                </div>
+                <div class="timeline-step">
+                    <div class="step-marker">○</div>
+                    <div class="step-content">
+                        <div class="step-title">Approved / Rejected</div>
+                        <small>You'll be notified of the decision</small>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="#" th:href="${trackingUrl}" class="track-btn">📋 Track Return Status</a>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 EntityKart. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

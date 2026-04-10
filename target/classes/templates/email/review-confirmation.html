@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Confirmation - EntityKart</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 20px; }
+        .email-container { max-width: 500px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .header { background: linear-gradient(135deg, #ff9f00 0%, #f57c00 100%); padding: 30px; text-align: center; color: white; }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .rating-stars { font-size: 32px; letter-spacing: 5px; margin: 15px 0; }
+        .review-box { background: #f8fafc; margin: 20px; padding: 20px; border-radius: 12px; text-align: center; }
+        .track-btn { display: inline-block; background: #2874f0; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; margin: 20px 0; font-weight: 600; }
+        .footer { background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>⭐ Thank You for Your Review!</h1>
+            <p>Your feedback helps us improve</p>
+        </div>
+        
+        <div class="content" style="padding: 30px; text-align: center;">
+            <p>Hello <strong th:text="${user.name}">Customer</strong>,</p>
+            
+            <div class="review-box">
+                <h3>Your Review for</h3>
+                <p><strong th:text="${productName}">Product Name</strong></p>
+                <div class="rating-stars" th:utext="${ratingStars}">★★★★★</div>
+                <p>Thank you for sharing your experience with us!</p>
+            </div>
+            
+            <p>Your review helps other customers make informed decisions.</p>
+            
+            <a href="#" th:href="${reviewUrl}" class="track-btn">📝 View Your Reviews</a>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 EntityKart. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

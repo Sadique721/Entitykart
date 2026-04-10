@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset OTP - EntityKart</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; }
+        .email-container { max-width: 500px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .otp-box { background: #f8fafc; margin: 30px; padding: 30px; text-align: center; border-radius: 16px; }
+        .otp-code { font-size: 36px; font-family: monospace; letter-spacing: 8px; background: white; padding: 15px; border-radius: 12px; font-weight: 700; color: #2874f0; border: 2px dashed #e2e8f0; margin: 20px 0; }
+        .expiry-info { color: #e53e3e; font-size: 14px; margin-top: 15px; }
+        .btn-reset { display: inline-block; background: #2874f0; color: white; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+        .footer { background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🔐 Password Reset Request</h1>
+            <p>We received a request to reset your password</p>
+        </div>
+        
+        <div class="content">
+            <div class="otp-box">
+                <p>Hello <strong th:text="${name}">User</strong>,</p>
+                <p>Use the following OTP to reset your password:</p>
+                
+                <div class="otp-code" th:text="${otp}">123456</div>
+                
+                <p>This OTP is valid for <strong th:text="${expiryMinutes}">10</strong> minutes.</p>
+                <div class="expiry-info">⚠️ For security reasons, do not share this OTP with anyone.</div>
+                
+                <a href="http://localhost:8080/verify-otp?email=" th:href="'http://localhost:8080/verify-otp?email=' + ${email}" class="btn-reset">Verify OTP</a>
+            </div>
+            
+            <p style="text-align: center; color: #718096; font-size: 14px; margin: 0 30px 30px;">
+                If you didn't request this, please ignore this email.<br>
+                Your password will not be changed unless you verify the OTP.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 EntityKart. All rights reserved.</p>
+            <p>EntityKart Internet Private Limited, Begusarai, Bihar - 861126</p>
+        </div>
+    </div>
+</body>
+</html>

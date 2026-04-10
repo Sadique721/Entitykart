@@ -1,0 +1,458 @@
+{
+  "name": "com.grownited.repository.ProductRepository",
+  "module": "JPA",
+  "type": "IMPERATIVE",
+  "methods": [
+    {
+      "name": "countByCategoryId",
+      "signature": "public abstract java.lang.Long com.grownited.repository.ProductRepository.countByCategoryId(java.lang.Integer)",
+      "query": {
+        "query": "SELECT COUNT(p) FROM ProductEntity p WHERE p.categoryId = :categoryId"
+      }
+    },
+    {
+      "name": "countBySubCategoryId",
+      "signature": "public abstract long com.grownited.repository.ProductRepository.countBySubCategoryId(java.lang.String)",
+      "query": {
+        "query": "SELECT COUNT(p) FROM ProductEntity p WHERE p.subCategoryId = :valueOf"
+      }
+    },
+    {
+      "name": "findByBrand",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findByBrand(java.lang.String,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.brand = :brand",
+        "count-query": "SELECT COUNT(p) FROM ProductEntity p WHERE p.brand = :brand"
+      }
+    },
+    {
+      "name": "findByCategoryId",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findByCategoryId(java.lang.Integer,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.categoryId = :categoryId",
+        "count-query": "SELECT COUNT(p) FROM ProductEntity p WHERE p.categoryId = :categoryId"
+      }
+    },
+    {
+      "name": "findByPriceRange",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findByPriceRange(java.lang.Float,java.lang.Float,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.price BETWEEN :minPrice AND :maxPrice",
+        "count-query": "SELECT count(p) FROM ProductEntity p WHERE p.price BETWEEN :minPrice AND :maxPrice"
+      }
+    },
+    {
+      "name": "findByProductNameContainingIgnoreCase",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findByProductNameContainingIgnoreCase(java.lang.String,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%'))",
+        "count-query": "SELECT count(p) FROM ProductEntity p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%'))"
+      }
+    },
+    {
+      "name": "findByStatus",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findByStatus(java.lang.String,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.status = :status",
+        "count-query": "SELECT COUNT(p) FROM ProductEntity p WHERE p.status = :status"
+      }
+    },
+    {
+      "name": "findBySubCategoryId",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findBySubCategoryId(java.lang.String,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.subCategoryId = :subCategoryId",
+        "count-query": "SELECT COUNT(p) FROM ProductEntity p WHERE p.subCategoryId = :subCategoryId"
+      }
+    },
+    {
+      "name": "findByUserId",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findByUserId(java.lang.Integer,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.userId = :userId",
+        "count-query": "SELECT COUNT(p) FROM ProductEntity p WHERE p.userId = :userId"
+      }
+    },
+    {
+      "name": "findDealProducts",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findDealProducts(org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.discountPercent > 20 ORDER BY p.discountPercent DESC",
+        "count-query": "SELECT count(p) FROM ProductEntity p WHERE p.discountPercent > 20"
+      }
+    },
+    {
+      "name": "findDistinctBrandsByCategory",
+      "signature": "public abstract java.util.List<java.lang.String> com.grownited.repository.ProductRepository.findDistinctBrandsByCategory(java.lang.Integer)",
+      "query": {
+        "query": "SELECT DISTINCT p.brand FROM ProductEntity p WHERE p.brand IS NOT NULL AND (:categoryId IS NULL OR p.categoryId = :categoryId)"
+      }
+    },
+    {
+      "name": "findFeaturedProducts",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findFeaturedProducts(org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p.* FROM product p LEFT JOIN order_details od ON p.product_id = od.product_id GROUP BY p.product_id ORDER BY COUNT(od.order_item_id) DESC, p.created_at DESC",
+        "count-query": "select count(p.*) FROM product p LEFT JOIN order_details od ON p.product_id = od.product_id GROUP BY p.product_id"
+      }
+    },
+    {
+      "name": "findFrequentlyBoughtTogether",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findFrequentlyBoughtTogether(java.lang.Integer,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p.* FROM product p JOIN order_details od ON p.product_id = od.product_id WHERE od.order_id IN (   SELECT DISTINCT order_id FROM order_details WHERE product_id = :productId) AND p.product_id != :productId GROUP BY p.product_id ORDER BY COUNT(*) DESC",
+        "count-query": "select count(p.*) FROM product p JOIN order_details od ON p.product_id = od.product_id WHERE od.order_id IN (   SELECT DISTINCT order_id FROM order_details WHERE product_id = :productId) AND p.product_id != :productId GROUP BY p.product_id"
+      }
+    },
+    {
+      "name": "findInStockProducts",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findInStockProducts(org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.stockQuantity > 0",
+        "count-query": "SELECT count(p) FROM ProductEntity p WHERE p.stockQuantity > 0"
+      }
+    },
+    {
+      "name": "findLowStockProducts",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findLowStockProducts(org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.stockQuantity > 0 AND p.stockQuantity < 10",
+        "count-query": "SELECT count(p) FROM ProductEntity p WHERE p.stockQuantity > 0 AND p.stockQuantity < 10"
+      }
+    },
+    {
+      "name": "findMaxPrice",
+      "signature": "public abstract java.lang.Float com.grownited.repository.ProductRepository.findMaxPrice()",
+      "query": {
+        "query": "SELECT MAX(p.price) FROM ProductEntity p"
+      }
+    },
+    {
+      "name": "findMinPrice",
+      "signature": "public abstract java.lang.Float com.grownited.repository.ProductRepository.findMinPrice()",
+      "query": {
+        "query": "SELECT MIN(p.price) FROM ProductEntity p"
+      }
+    },
+    {
+      "name": "findSimilarProducts",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findSimilarProducts(java.lang.Integer,java.lang.Integer,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE p.categoryId = :categoryId AND p.productId != :productId ORDER BY p.createdAt DESC",
+        "count-query": "SELECT count(p) FROM ProductEntity p WHERE p.categoryId = :categoryId AND p.productId != :productId"
+      }
+    },
+    {
+      "name": "findWithFilters",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.findWithFilters(java.lang.Integer,java.lang.String,java.lang.Double,java.lang.Double,java.lang.String,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE (:categoryId IS NULL OR p.categoryId = :categoryId) AND (:brand IS NULL OR p.brand = :brand) AND (:minPrice IS NULL OR p.price >= :minPrice) AND (:maxPrice IS NULL OR p.price <= :maxPrice) AND (:inStock IS NULL OR (:inStock = 'true' AND p.stockQuantity > 0))",
+        "count-query": "SELECT count(p) FROM ProductEntity p WHERE (:categoryId IS NULL OR p.categoryId = :categoryId) AND (:brand IS NULL OR p.brand = :brand) AND (:minPrice IS NULL OR p.price >= :minPrice) AND (:maxPrice IS NULL OR p.price <= :maxPrice) AND (:inStock IS NULL OR (:inStock = 'true' AND p.stockQuantity > 0))"
+      }
+    },
+    {
+      "name": "searchProducts",
+      "signature": "public abstract org.springframework.data.domain.Page<com.grownited.entity.ProductEntity> com.grownited.repository.ProductRepository.searchProducts(java.lang.String,org.springframework.data.domain.Pageable)",
+      "query": {
+        "query": "SELECT p FROM ProductEntity p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%'))",
+        "count-query": "SELECT count(p) FROM ProductEntity p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%'))"
+      }
+    },
+    {
+      "name": "deleteAllByIdInBatch",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAllInBatch",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAllInBatch",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteInBatch",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "flush",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "getById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "getOne",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "getReferenceById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "saveAllAndFlush",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "saveAndFlush",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "count",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "delete",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteAllById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "deleteById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "existsById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "save",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAllById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAllById",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "saveAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "saveAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "count",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "exists",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findAll",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findBy",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    },
+    {
+      "name": "findOne",
+      "signature": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+      "fragment": {
+        "interface": "org.springframework.data.jpa.repository.support.SimpleJpaRepository",
+        "fragment": "org.springframework.data.jpa.repository.support.SimpleJpaRepository"
+      }
+    }
+  ]
+}
