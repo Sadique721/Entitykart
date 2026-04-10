@@ -80,3 +80,5 @@ D --> E[Repositories]
 E --> F[(MySQL Database)]
 B --> G[Cloudinary]
 B --> H[Authorize.Net]
+
+---
