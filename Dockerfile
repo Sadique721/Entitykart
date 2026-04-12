@@ -1,24 +1,15 @@
-# ---- Build Stage ----
-FROM maven:3.9-eclipse-temurin-17 AS build
+ 
+# Stage 1: Build the application
+FROM maven:3.9.9-amazoncorretto-21-alpine AS builder
 WORKDIR /app
-
-# Copy pom.xml and download dependencies (cached unless pom.xml changes)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Copy source code and build the JAR
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# ---- Run Stage ----
-FROM eclipse-temurin:17-jre-alpine
-WORKDIR /app
+# Stage 2: Create a lightweight runtime image
+FROM alpine/java:21-jdk
+WORKDIR /usr/local/tomcat/webapps/
 
-# Copy the built JAR from the build stage
-COPY --from=build /app/target/*.jar app.jar
-
-# Expose the port (Render will map to the internal PORT env variable)
-EXPOSE 9999
-
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY --from=builder /app/target/Entitykart-1.war app.war
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.war"]
