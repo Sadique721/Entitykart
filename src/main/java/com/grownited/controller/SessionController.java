@@ -152,7 +152,7 @@ public class SessionController {
         return "login";
     }
     
-    @GetMapping(value = {, "/index", "/home"})
+    @GetMapping(value = { "/index", "/home"})
     @Transactional(readOnly = true)
     public String homePage(Model model, HttpSession session) {
         UserEntity currentUser = (UserEntity) session.getAttribute("user");
