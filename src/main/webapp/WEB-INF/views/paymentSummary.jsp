@@ -280,7 +280,7 @@
                                     <tr>
                                         <th>Payment ID</th>
                                         <th>Order ID</th>
-                                        <th>Amount (₹)</th>
+                                        <th>Amount (Rs)</th>
                                         <th>Payment Mode</th>
                                         <th>Transaction Ref</th>
                                         <th>Status</th>

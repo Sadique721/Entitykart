@@ -321,7 +321,7 @@ public class ReturnRefundController {
         Optional<OrderEntity> orderOpt = orderRepository.findById(detail.getOrderId());
         Optional<ProductEntity> productOpt = productRepository.findById(detail.getProductId());
         
-        model.addAttribute("return", returnReq);
+        model.addAttribute("returnReq", returnReq);   // instead of "return"
         model.addAttribute("orderItem", detail);
         model.addAttribute("order", orderOpt.orElse(null));
         model.addAttribute("product", productOpt.orElse(null));
@@ -483,17 +483,22 @@ public class ReturnRefundController {
     @GetMapping("/api/admin/return-stats")
     @ResponseBody
     public Map<String, Object> getReturnStatistics(HttpSession session) {
-        
         Map<String, Object> stats = new HashMap<>();
-        
         UserEntity currentUser = (UserEntity) session.getAttribute("user");
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
             return stats;
         }
         
+        // Initialize all expected keys with 0
+        stats.put("requestedcount", 0L);
+        stats.put("approvedcount", 0L);
+        stats.put("rejectedcount", 0L);
+        stats.put("refundedcount", 0L);
+        
         List<Object[]> statistics = returnRefundRepository.getReturnStatistics();
         for (Object[] stat : statistics) {
-            stats.put(stat[0].toString().toLowerCase() + "Count", stat[1]);
+            String key = stat[0].toString().toLowerCase() + "count";
+            stats.put(key, stat[1]);
         }
         
         stats.put("totalReturns", returnRefundRepository.count());

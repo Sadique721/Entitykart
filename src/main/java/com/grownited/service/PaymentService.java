@@ -30,10 +30,10 @@ import net.authorize.api.controller.base.ApiOperationBase;
 @Service
 public class PaymentService {
 
-    @Value("${authorize.net.api-login-id:89g9AHbvJ}")
+    @Value("${authorize.net.api-login-id}")
     private String apiLoginId;
     
-    @Value("${authorize.net.transaction-key:3c99q2SFnD92pE64}")
+    @Value("${authorize.net.transaction-key}")
     private String transactionKey;
     
     @Value("${authorize.net.environment:sandbox}")

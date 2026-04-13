@@ -129,4 +129,8 @@ public class ReturnRefundEntity {
                ", orderItemId=" + orderItemId + 
                ", returnStatus=" + returnStatus + "]";
     }
+    
+    public String getFormattedRequestedAtWithTime() {
+        return getFormattedRequestedAt(); // same format
+    }
 }

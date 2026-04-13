@@ -106,17 +106,17 @@
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="stat-card d-flex justify-content-between align-items-center">
-                <div>
-                    <p class="text-muted mb-1">Total Reviews</p>
-                    <h3 class="mb-0" id="totalReviews">--</h3>
-                    <small class="text-info">Avg Rating: <span id="avgRating">--</span> / 5</small>
-                </div>
-                <div class="bg-info bg-opacity-10 p-3 rounded">
-                    <i class="fas fa-star fa-2x text-info"></i>
-                </div>
-            </div>
+    <div class="stat-card d-flex justify-content-between align-items-center" style="border-left: 4px solid #ffc107;">
+        <div>
+            <p class="text-muted mb-1">Total Reviews</p>
+            <h3 class="mb-0" id="totalReviews">--</h3>
+            <small class="text-info">Avg Rating: <span id="avgRating">--</span> / 5</small>
         </div>
+        <div class="bg-warning bg-opacity-10 p-3 rounded">
+            <i class="fas fa-star fa-2x text-warning"></i>
+        </div>
+    </div>
+</div>
     </div>
 
     <!-- Charts Row 1 -->
@@ -395,22 +395,63 @@
         }
 
         // Rating Distribution
-        const ratingDist = await fetchJSON('/api/admin/rating-distribution');
-        if (ratingDist) {
-            const ratings = ['1 Star', '2 Star', '3 Star', '4 Star', '5 Star'];
-            const counts = [ratingDist.oneStar, ratingDist.twoStar, ratingDist.threeStar, ratingDist.fourStar, ratingDist.fiveStar];
-            if (ratingChart) ratingChart.destroy();
-            const ctxRating = document.getElementById('ratingDistributionChart').getContext('2d');
-            ratingChart = new Chart(ctxRating, {
-                type: 'bar',
-                data: {
-                    labels: ratings,
-                    datasets: [{ label: 'Number of Reviews', data: counts, backgroundColor: '#ffc107' }]
+// Rating Distribution with Different Colors
+const ratingDist = await fetchJSON('/api/admin/rating-distribution');
+if (ratingDist) {
+    const ratings = ['1 Star', '2 Star', '3 Star', '4 Star', '5 Star'];
+    const counts = [
+        ratingDist.oneStar || 0,
+        ratingDist.twoStar || 0,
+        ratingDist.threeStar || 0,
+        ratingDist.fourStar || 0,
+        ratingDist.fiveStar || 0
+    ];
+    
+    // Define distinct colors for each rating
+    const barColors = ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#28a745'];
+    
+    if (ratingChart) ratingChart.destroy();
+    const ctxRating = document.getElementById('ratingDistributionChart').getContext('2d');
+    ratingChart = new Chart(ctxRating, {
+        type: 'bar',
+        data: {
+            labels: ratings,
+            datasets: [{
+                label: 'Number of Reviews',
+                data: counts,
+                backgroundColor: barColors,
+                borderColor: barColors.map(c => c), // optional: same as background
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Reviews'
+                    }
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Rating (Stars)'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.raw} review(s)`
+                    }
+                }
+            }
         }
-
+    });
+}
         // Return Stats
         const returnStats = await fetchJSON('/api/admin/return-stats');
         if (returnStats) {

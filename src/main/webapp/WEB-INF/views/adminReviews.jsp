@@ -191,6 +191,7 @@
                             <h5 class="mb-0"><i class="fas fa-chart-line me-2 text-success"></i>Monthly Review Trend</h5>
                             <div>
                                 <select class="form-select form-select-sm" id="yearSelect" style="width: auto;" onchange="loadMonthlyData()">
+                                	<option value="2025">2026</option>
                                     <option value="2025">2025</option>
                                     <option value="2024">2024</option>
                                     <option value="2023">2023</option>
