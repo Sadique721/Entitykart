@@ -448,7 +448,7 @@
                 data: {
                     labels: dates,
                     datasets: [{
-                        label: 'Daily Revenue (₹)',
+                        label: 'Daily Revenue (Rs)',
                         data: revenues,
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -468,7 +468,7 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{ label: 'Revenue (₹)', data: mockData, borderColor: '#667eea', tension: 0.4, fill: true }]
+                    datasets: [{ label: 'Revenue (Rs)', data: mockData, borderColor: '#667eea', tension: 0.4, fill: true }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });

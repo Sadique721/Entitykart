@@ -723,7 +723,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Revenue (₹)',
+                    label: 'Revenue (Rs)',
                     data: values,
                     borderColor: '#2874f0',
                     backgroundColor: 'rgba(40, 116, 240, 0.1)',
@@ -751,7 +751,7 @@
                         bodyColor: '#fff',
                         callbacks: {
                             label: function(context) {
-                                return 'Revenue: ₹' + context.raw.toLocaleString('en-IN');
+                                return 'Revenue: Rs' + context.raw.toLocaleString('en-IN');
                             },
                             afterLabel: function(context) {
                                 return fullDates[context.dataIndex];
@@ -764,7 +764,7 @@
                         beginAtZero: true,
                         grid: { color: 'rgba(0, 0, 0, 0.05)' },
                         ticks: {
-                            callback: function(value) { return '₹' + value.toLocaleString('en-IN'); }
+                            callback: function(value) { return 'Rs' + value.toLocaleString('en-IN'); }
                         }
                     },
                     x: {
@@ -846,7 +846,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Monthly Revenue (₹)',
+                    label: 'Monthly Revenue (Rs)',
                     data: values,
                     backgroundColor: gradient,
                     borderColor: '#2874f0',
@@ -867,7 +867,7 @@
                         bodyColor: '#fff',
                         callbacks: {
                             label: function(context) {
-                                return '₹' + context.raw.toLocaleString('en-IN');
+                                return 'Rs' + context.raw.toLocaleString('en-IN');
                             }
                         }
                     }
@@ -877,9 +877,9 @@
                         beginAtZero: true,
                         grid: { color: 'rgba(0, 0, 0, 0.05)' },
                         ticks: {
-                            callback: function(value) { return '₹' + (value / 100000).toFixed(1) + 'L'; }
+                            callback: function(value) { return 'Rs' + (value / 100000).toFixed(1) + 'L'; }
                         },
-                        title: { display: true, text: 'Revenue (in Lakhs ₹)', color: '#666' }
+                        title: { display: true, text: 'Revenue (in Lakhs Rs)', color: '#666' }
                     },
                     x: {
                         grid: { display: false },

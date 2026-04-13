@@ -102,13 +102,6 @@
                                                 <option value="Other" ${userEntity.gender == 'Other' ? 'selected' : ''}>Other</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Role</label>
-                                            <select name="role" class="form-select form-select-sm">
-                                                <option value="PARTICIPANT" ${userEntity.role == 'PARTICIPANT' ? 'selected' : ''}>Participant</option>
-                                                <option value="ADMIN" ${userEntity.role == 'ADMIN' ? 'selected' : ''}>Admin</option>
-                                            </select>
-                                        </div>
                                         <div class="col-md-12 mb-3">
                                             <label class="form-label">Profile Picture</label>
                                             <input type="file" class="form-control form-control-sm" name="profilePic" accept="image/*" id="profilePic">
