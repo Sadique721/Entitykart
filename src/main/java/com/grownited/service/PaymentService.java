@@ -48,11 +48,11 @@ public class PaymentService {
         String expiry = String.format("%02d%02d", Integer.parseInt(expiryMonth), Integer.parseInt(expiryYear.substring(2)));
 
         // Set environment based on property
-        if ("production".equalsIgnoreCase(environment)) {
-            ApiOperationBase.setEnvironment(Environment.PRODUCTION);
-        } else {
+       // if ("production".equalsIgnoreCase(environment)) {
+         //   ApiOperationBase.setEnvironment(Environment.PRODUCTION);
+        //} else {
             ApiOperationBase.setEnvironment(Environment.SANDBOX);
-        }
+        //}
 
         MerchantAuthenticationType merchantAuthentication = new MerchantAuthenticationType();
         merchantAuthentication.setName(apiLoginId);
