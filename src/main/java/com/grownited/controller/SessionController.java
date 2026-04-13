@@ -146,7 +146,13 @@ public class SessionController {
     }
 
     // ========================= HOME PAGE (FOR ALL USERS) =========================
-    @GetMapping(value = {"/", "/index", "/home"})
+
+    @GetMapping("/")
+    public String rootURL(){
+        return "login";
+    }
+    
+    @GetMapping(value = {, "/index", "/home"})
     @Transactional(readOnly = true)
     public String homePage(Model model, HttpSession session) {
         UserEntity currentUser = (UserEntity) session.getAttribute("user");
