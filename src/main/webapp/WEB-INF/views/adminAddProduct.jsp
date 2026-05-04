@@ -103,9 +103,9 @@
                         <div class="row mb-4">
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label required-field">Price (₹)</label>
+                                    <label class="form-label required-field">Price (Rs)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">₹</span>
+                                        <span class="input-group-text">Rs</span>
                                         <input type="number" class="form-control" name="price" 
                                                placeholder="0.00" step="0.01" min="0" required 
                                                onchange="calculateDiscount()" id="price">
@@ -115,7 +115,7 @@
                             
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label">MRP (₹)</label>
+                                    <label class="form-label">MRP (Rs)</label>
                                     <div class="input-group">
                                         <span class="input-group-text">₹</span>
                                         <input type="number" class="form-control" name="mrp" 
