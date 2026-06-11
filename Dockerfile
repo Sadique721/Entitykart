@@ -25,4 +25,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-9999}/health || exit 1
 
 # Run with memory limits suitable for Render free tier (256‑512 MB)
-ENTRYPOINT ["java", "-Xmx256m", "-Xms128m", "-XX:+UseContainerSupport", "-jar", "app.war"]
+ENTRYPOINT ["java", "-Xmx384m", "-Xms256m", "-XX:+UseContainerSupport", "-jar", "app.war"]
