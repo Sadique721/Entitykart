@@ -55,16 +55,16 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<!-- Source: https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-jasper -->
 		<dependency>
-    		<groupId>org.springframework.boot</groupId>
-    		<artifactId>spring-boot-starter-actuator</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>org.apache.tomcat.embed</groupId>
-		    <artifactId>tomcat-embed-jasper</artifactId>
-		 </dependency>     		
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.glassfish.web</groupId>
@@ -75,15 +75,14 @@
 			<groupId>jakarta.servlet.jsp.jstl</groupId>
 			<artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
 		</dependency>
-		
-		
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 		<dependency>
-    		<groupId>org.springframework.security</groupId>
-    		<artifactId>spring-security-crypto</artifactId>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cloudinary</groupId>
@@ -92,60 +91,60 @@
 		</dependency>
 		<!-- Apache POI for Excel -->
 		<dependency>
-    		<groupId>org.apache.poi</groupId>
-    		<artifactId>poi-ooxml</artifactId>
-    		<version>5.2.3</version>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.3</version>
 		</dependency>
 
 		<!-- For Word export (using simple text, but better to use POI for docx) -->
 		<dependency>
-    		<groupId>org.apache.poi</groupId>
-    		<artifactId>poi-scratchpad</artifactId>
-    		<version>5.2.3</version>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-scratchpad</artifactId>
+			<version>5.2.3</version>
 		</dependency>
-		
+
 		<dependency>
-    		<groupId>com.fasterxml.jackson.core</groupId>
-    		<artifactId>jackson-databind</artifactId>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
 		</dependency>
-		
+
 		<!-- Source: https://mvnrepository.com/artifact/net.authorize/anet-java-sdk -->
 		<dependency>
-    		<groupId>net.authorize</groupId>
-    		<artifactId>anet-java-sdk</artifactId>
-    		<version>2.0.0</version>
+			<groupId>net.authorize</groupId>
+			<artifactId>anet-java-sdk</artifactId>
+			<version>2.0.0</version>
 		</dependency>
-		
+
 		<!-- JAXB dependencies for Java 9+ (required by Authorize.Net SDK) -->
 		<dependency>
-    		<groupId>javax.xml.bind</groupId>
-    		<artifactId>jaxb-api</artifactId>
-    		<version>2.3.1</version>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.3.1</version>
 		</dependency>
 		<dependency>
-    		<groupId>com.sun.xml.bind</groupId>
-    		<artifactId>jaxb-core</artifactId>
-    		<version>2.3.0.1</version>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-core</artifactId>
+			<version>2.3.0.1</version>
 		</dependency>
 		<dependency>
-    		<groupId>com.sun.xml.bind</groupId>
-    		<artifactId>jaxb-impl</artifactId>
-    		<version>2.3.2</version>
-    		<scope>runtime</scope>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-impl</artifactId>
+			<version>2.3.2</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-    		<groupId>javax.activation</groupId>
-    		<artifactId>activation</artifactId>
-    		<version>1.1.1</version>
+			<groupId>javax.activation</groupId>
+			<artifactId>activation</artifactId>
+			<version>1.1.1</version>
 		</dependency>
-		
+
 		<!-- Dotenv for .env file support -->
 		<dependency>
-    		<groupId>io.github.cdimascio</groupId>
-    		<artifactId>dotenv-java</artifactId>
-    		<version>3.0.0</version>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.0.0</version>
 		</dependency>
-		
+
 	</dependencies>
 	<build>
 		<plugins>
