@@ -72,6 +72,8 @@
 ## 🏗️ Architecture
 
 ```mermaid
+
+
 graph TD
 A[Client Browser] --> B[Spring Boot]
 B --> C[Controllers]
