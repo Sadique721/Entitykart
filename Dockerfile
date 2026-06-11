@@ -18,7 +18,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 # Expose the application port (Render overrides with $PORT)
-EXPOSE 8080
+EXPOSE 9999
 
 # Health check (ensure the app is responding)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
