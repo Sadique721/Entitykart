@@ -72,16 +72,11 @@
 ## 🏗️ Architecture
 
 ```mermaid
-
-
 graph TD
-A[Client Browser] --> B[Spring Boot]
-B --> C[Controllers]
-C --> D[Services]
-D --> E[Repositories]
-E --> F[(MySQL Database)]
-B --> G[Cloudinary]
-B --> H[Authorize.Net]
-
-"# Test-Project" 
-#
+    A[Client Browser] --> B[Spring Boot]
+    B --> C[Controllers]
+    C --> D[Services]
+    D --> E[Repositories]
+    E --> F[(MySQL Database)]
+    B --> G[Cloudinary]
+    B --> H[Authorize.Net]
