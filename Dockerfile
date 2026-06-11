@@ -18,11 +18,12 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 # Expose the application port (Render overrides with $PORT)
-EXPOSE 9999
+ENV PORT=10000
+EXPOSE 10000
 
 # Health check (ensure the app is responding)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-9999}/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=120s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-10000}/health || exit 1
 
 # Run with memory limits suitable for Render free tier (256‑512 MB)
 ENTRYPOINT ["java", "-Xmx384m", "-Xms256m", "-XX:+UseContainerSupport", "-jar", "app.war"]
