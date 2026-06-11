@@ -146,7 +146,7 @@ public class SessionController {
     }
 
     // ========================= HOME PAGE (FOR ALL USERS) =========================
-    @GetMapping(value = {"/", "/index", "/home"})
+    @GetMapping(value = {"/index", "/home"})
     @Transactional(readOnly = true)
     public String homePage(Model model, HttpSession session) {
         UserEntity currentUser = (UserEntity) session.getAttribute("user");
@@ -186,7 +186,7 @@ public class SessionController {
         return "signup";
     }
 
-    @GetMapping("/login")
+    @GetMapping(value = {"/","/login"})
     public String loginPage(HttpSession session) {
         if (session.getAttribute("user") != null) {
             return "redirect:/index";
