@@ -31,4 +31,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
 
 # Run with memory limits optimized for Render free tier (512 MB container RAM)
 # Balances heap size (280m) to prevent GC thrashing and off-heap limits to prevent OS OOM-kills
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:+UseSerialGC", "-Xmx280m", "-Xms192m", "-XX:MaxMetaspaceSize=80m", "-XX:ReservedCodeCacheSize=40m", "-Xss512k", "-jar", "app.war"]
+# Specifies non-blocking entropy source to prevent hangs during TLS/SSL database handshakes on virtualized cloud hosts
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-XX:+UseContainerSupport", "-XX:+UseSerialGC", "-Xmx280m", "-Xms192m", "-XX:MaxMetaspaceSize=80m", "-XX:ReservedCodeCacheSize=40m", "-Xss512k", "-jar", "app.war"]
