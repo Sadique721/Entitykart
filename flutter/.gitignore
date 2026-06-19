@@ -1,0 +1,7 @@
+# Flutter VCS ignore file
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+!build/app/outputs/flutter-apk/app-debug.apk
