@@ -29,7 +29,8 @@ public class AuthFilter implements Filter {
         "/send-otp",              // POST for OTP
         "/verify-otp",            // POST OTP verification
         "/update-password",
-        "/register"
+        "/register",
+        "/health"                 // Health check endpoint
     ));
 
     // Public URL prefixes (no authentication required) – includes static resources

@@ -10,11 +10,15 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copy the built WAR file
-COPY --from=builder /app/target/Entitykart-1.war app.war
-
 # Create a non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy the built WAR file with proper user ownership
+COPY --from=builder --chown=appuser:appgroup /app/target/Entitykart-1.war app.war
+
+# Ensure appuser owns /app directory for Tomcat JSP compilation and runtime logs
+RUN chown -R appuser:appgroup /app
+
 USER appuser
 
 # Expose the application port (Render overrides with $PORT)
@@ -25,5 +29,5 @@ EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-10000}/health || exit 1
 
-# Run with memory limits suitable for Render free tier (256‑512 MB)
-ENTRYPOINT ["java", "-Xmx384m", "-Xms256m", "-XX:+UseContainerSupport", "-jar", "app.war"]
+# Run with memory limits suitable for Render free tier (512 MB container RAM)
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:+UseSerialGC", "-Xmx220m", "-Xms128m", "-XX:MaxMetaspaceSize=96m", "-XX:ReservedCodeCacheSize=48m", "-Xss512k", "-jar", "app.war"]
