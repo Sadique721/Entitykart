@@ -29,5 +29,6 @@ EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-10000}/health || exit 1
 
-# Run with memory limits suitable for Render free tier (512 MB container RAM)
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:+UseSerialGC", "-Xmx220m", "-Xms128m", "-XX:MaxMetaspaceSize=96m", "-XX:ReservedCodeCacheSize=48m", "-Xss512k", "-jar", "app.war"]
+# Run with memory limits optimized for Render free tier (512 MB container RAM)
+# Balances heap size (280m) to prevent GC thrashing and off-heap limits to prevent OS OOM-kills
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:+UseSerialGC", "-Xmx280m", "-Xms192m", "-XX:MaxMetaspaceSize=80m", "-XX:ReservedCodeCacheSize=40m", "-Xss512k", "-jar", "app.war"]
