@@ -32,6 +32,17 @@
 </tr>
 </table>
 
+<!-- ========== NEW: SYSTEM DIAGRAM SECTION ========== -->
+## 📊 System Architecture & Workflow
+
+```mermaid
+flowchart TD
+    A[React.js Frontend UI] -->|HTTP Headers + JWT| B[Spring Boot REST Controllers]
+    B --> C[Security Config Filter Chain]
+    C --> D[E-Commerce Services Layer]
+    D --> E[(MySQL Database Store)]
+```
+
 ---
 
 <p align="center">
